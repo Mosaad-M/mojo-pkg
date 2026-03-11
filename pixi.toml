@@ -1,0 +1,26 @@
+[workspace]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
+name = "mojo-pkg"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[dependencies]
+mojo = ">=0.26.1"
+
+[activation]
+env = { TLS_PURE = "../tls" }
+
+[tasks]
+build = "bash build_and_run.sh"
+install-tool = "bash build_and_run.sh"
+
+test-toml     = "mojo run -I src -I $TLS_PURE tests/test_toml.mojo"
+test-manifest = "mojo run -I src -I $TLS_PURE tests/test_manifest.mojo"
+test-semver   = "mojo run -I src -I $TLS_PURE tests/test_semver.mojo"
+test-validate = "mojo run -I src -I $TLS_PURE tests/test_validate.mojo"
+test-lockfile = "mojo run -I src -I $TLS_PURE tests/test_lockfile.mojo"
+test-flags    = "mojo run -I src -I $TLS_PURE tests/test_flags.mojo"
+test-json     = "mojo run -I src -I $TLS_PURE tests/test_json.mojo"
+test-url      = "mojo run -I src -I $TLS_PURE tests/test_url.mojo"
+
+test = { depends-on = ["test-toml", "test-manifest", "test-semver", "test-validate", "test-lockfile", "test-flags", "test-json", "test-url"] }

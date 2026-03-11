@@ -1,0 +1,19 @@
+[package]
+name = "mojo-pkg"
+version = "0.1.0"
+description = "Mojo package manager — fetch, resolve, and install Mojo packages"
+license = "MIT"
+platforms = ["linux-64", "osx-arm64"]
+
+[mojo]
+requires = ">=0.26.1"
+
+[dependencies]
+json     = { git = "Mosaad-M/json",     version = ">=1.0.0" }
+url      = { git = "Mosaad-M/url",      version = ">=1.0.0" }
+tcp      = { git = "Mosaad-M/tcp",      version = ">=1.0.0" }
+tls      = { git = "Mosaad-M/tls",      version = ">=1.0.0" }
+requests = { git = "Mosaad-M/requests", version = ">=1.0.0" }
+
+[c-dependencies]
+# errno_helper comes transitively from tcp

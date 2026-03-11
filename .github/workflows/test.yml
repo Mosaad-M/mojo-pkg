@@ -1,0 +1,22 @@
+name: Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Clone tls as a sibling directory (its natural name matches the repo)
+      - name: Clone tls
+        run: git clone --depth 1 https://github.com/Mosaad-M/tls.git ../tls
+
+      - name: Install pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+
+      - name: Run all tests
+        run: pixi run test
