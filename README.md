@@ -2,13 +2,31 @@
 
 A package manager CLI for Mojo, written in pure Mojo.
 
-## Prerequisites
+## Installation
+
+### Quick install (Linux x86_64)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Mosaad-M/mojo-pkg/main/scripts/install.sh | bash
+```
+
+### Manual
+
+Download from [GitHub Releases](https://github.com/Mosaad-M/mojo-pkg/releases/latest), extract, and add `~/.mojo/bin` to your PATH.
+
+Verify the download:
+
+```bash
+sha256sum -c mojo-pkg-linux-64.tar.gz.sha256
+```
+
+## Build from Source
+
+### Prerequisites
 
 - [pixi](https://pixi.sh) for environment management
 - Mojo ≥ 0.26.1 (via pixi)
-- A sibling `tls/` directory at `../tls` — clone with `git clone https://github.com/Mosaad-M/tls.git ../tls` (or set `TLS_PURE` env var to a custom path)
-
-## Install
+- A sibling `tls_pure/` directory at `../tls_pure` — clone with `git clone https://github.com/Mosaad-M/tls.git ../tls_pure` (or set `TLS_PURE` env var to a custom path)
 
 ```bash
 pixi run build

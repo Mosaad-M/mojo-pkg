@@ -8,7 +8,7 @@ version = "0.1.0"
 mojo = ">=0.26.1"
 
 [activation]
-env = { TLS_PURE = "../tls" }
+env = { TLS_PURE = "../tls_pure" }
 
 [tasks]
 build = "bash build_and_run.sh"
@@ -24,3 +24,5 @@ test-json     = "mojo run -I src -I $TLS_PURE tests/test_json.mojo"
 test-url      = "mojo run -I src -I $TLS_PURE tests/test_url.mojo"
 
 test = { depends-on = ["test-toml", "test-manifest", "test-semver", "test-validate", "test-lockfile", "test-flags", "test-json", "test-url"] }
+
+test-build = "bash -c 'bash build_and_run.sh && ~/.mojo/bin/mojo-pkg version | grep -q mojo-pkg && echo PASS: binary smoke test'"

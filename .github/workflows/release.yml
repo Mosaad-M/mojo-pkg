@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Clone tls
-        run: git clone --depth 1 https://github.com/Mosaad-M/tls.git ../tls
+        run: git clone --depth 1 https://github.com/Mosaad-M/tls.git ../tls_pure
 
       - name: Install pixi
         uses: prefix-dev/setup-pixi@v0.8.1
@@ -27,7 +27,12 @@ jobs:
       - name: Package binary
         run: tar czf mojo-pkg-linux-64.tar.gz -C "$HOME/.mojo/bin" mojo-pkg
 
+      - name: Generate SHA256
+        run: sha256sum mojo-pkg-linux-64.tar.gz > mojo-pkg-linux-64.tar.gz.sha256
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: mojo-pkg-linux-64.tar.gz
+          files: |
+            mojo-pkg-linux-64.tar.gz
+            mojo-pkg-linux-64.tar.gz.sha256
