@@ -8,7 +8,7 @@ mkdir -p "$INSTALL_DIR"
 SELF="$(cd "$(dirname "$0")" && pwd)"
 
 echo "Building mojo-pkg..."
-TLS_PURE="${TLS_PURE:-$(cd "$SELF/../tls" 2>/dev/null && pwd || echo "$SELF/../tls")}"
+TLS_PURE="${TLS_PURE:-$(cd "$SELF/../tls_pure" 2>/dev/null && pwd || echo "$SELF/../tls_pure")}"
 mojo build "$SELF/src/main.mojo" \
     -I "$SELF/src" \
     -I "$TLS_PURE" \
