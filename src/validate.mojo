@@ -5,7 +5,9 @@
 
 fn validate_name(name: String) raises:
     """Reject invalid package names.
-    Allowed: [a-z0-9][a-z0-9_-]*, max 64 chars."""
+    Allowed: [a-z0-9][a-z0-9_-]*, max 64 chars.
+    Note: only ASCII characters are checked; non-ASCII bytes are rejected implicitly
+    because they fall outside all allowed ranges."""
     var bytes = name.as_bytes()
     var n = len(bytes)
     if n == 0 or n > 64:
@@ -37,6 +39,8 @@ fn validate_version(version: String) raises:
     var n = len(bytes)
     if n == 0:
         raise Error("Invalid version: empty string")
+    if n > 32:
+        raise Error("Invalid version: '" + version + "' (max 32 chars)")
     var dots = 0
     for i in range(n):
         var b = bytes[i]
@@ -54,10 +58,19 @@ fn validate_version(version: String) raises:
         raise Error(
             "Invalid version: '" + version + "' (must be X.Y.Z format)"
         )
+    # Reject leading/trailing dots and consecutive dots (empty components)
+    if bytes[0] == 46:
+        raise Error("Invalid version: '" + version + "' (leading dot)")
+    if bytes[n - 1] == 46:
+        raise Error("Invalid version: '" + version + "' (trailing dot)")
+    for i in range(n - 1):
+        if bytes[i] == 46 and bytes[i + 1] == 46:
+            raise Error("Invalid version: '" + version + "' (consecutive dots)")
 
 
 fn validate_tarball_url(url: String) raises:
-    """Reject tarball URLs that don't start with https://github.com/"""
+    """Reject tarball URLs that don't start with https://github.com/ and contain
+    any character outside the strict allowlist A-Za-z0-9/-_.:%=?&#@."""
     alias PREFIX = "https://github.com/"
     var prefix_bytes = PREFIX.as_bytes()
     var url_bytes = url.as_bytes()
@@ -74,6 +87,19 @@ fn validate_tarball_url(url: String) raises:
                 + url
                 + "' (must start with https://github.com/)"
             )
+    # Require at least one path character after the prefix
+    if len(url_bytes) <= len(prefix_bytes):
+        raise Error("Insecure tarball URL: no path after github.com/")
+    # Strict allowlist: A-Z a-z 0-9 / - _ . : % = ? & # @
+    for i in range(len(prefix_bytes), len(url_bytes)):
+        var b = url_bytes[i]
+        var ok = (b >= 65 and b <= 90) or (b >= 97 and b <= 122) or  # A-Z, a-z
+                 (b >= 48 and b <= 57) or  # 0-9
+                 b == 47 or b == 45 or b == 95 or b == 46 or b == 58 or  # / - _ . :
+                 b == 37 or b == 61 or b == 63 or b == 38 or b == 35 or  # % = ? & #
+                 b == 64                                                    # @
+        if not ok:
+            raise Error("Insecure tarball URL: contains disallowed character")
 
 
 fn validate_cdep_name(name: String) raises:

@@ -77,6 +77,12 @@ fn semver_parse(version: String) raises -> SemVer:
     if len(parts) < 2:
         raise Error("Invalid semver: " + version)
 
+    # Reject empty components (e.g. "1.", ".1.0", "1..0")
+    if len(String(parts[0])) == 0 or len(String(parts[1])) == 0:
+        raise Error("Invalid semver: empty component in " + version)
+    if len(parts) >= 3 and len(String(parts[2])) == 0:
+        raise Error("Invalid semver: empty component in " + version)
+
     var major = _parse_int(String(parts[0]))
     var minor = _parse_int(String(parts[1]))
     var patch = 0
@@ -184,8 +190,11 @@ fn resolve(manifest: Manifest, mut client: HttpClient) raises -> LockFile:
 
     # BFS queue of (name, constraint) pairs
     var queue = List[Dependency]()
+    # queued tracks names already in the queue to prevent O(N²) re-fetches on cycles
+    var queued = Dict[String, Bool]()
     for i in range(len(manifest.deps)):
         queue.append(manifest.deps[i].copy())
+        queued[manifest.deps[i].name] = True
 
     var i = 0
     while i < len(queue):
@@ -219,10 +228,13 @@ fn resolve(manifest: Manifest, mut client: HttpClient) raises -> LockFile:
         print("  Resolved: " + dep_name + " " + pv.version)
 
         # Use transitive deps from registry (avoids extra HTTP round-trip per package)
+        # TODO (R-3): pv.deps only carries names, not version constraints; once the
+        # registry format includes {name, constraint} pairs, pass the constraint here.
         for j in range(len(pv.deps)):
             var tdep = pv.deps[j]
             validate_name(tdep)
-            if lockfile_find(lock, tdep) < 0:
+            if lockfile_find(lock, tdep) < 0 and not queued.get(tdep, False):
                 queue.append(Dependency(tdep, "", ">=0.0.0"))
+                queued[tdep] = True
 
     return lock^

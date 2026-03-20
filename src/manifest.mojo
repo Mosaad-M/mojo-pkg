@@ -4,7 +4,7 @@
 from collections import Dict
 from toml import TomlDoc, toml_parse, toml_get, toml_get_or, toml_has_section, toml_get_inline, toml_section_keys
 from fs import fs_read_file, fs_write_file
-from validate import validate_cdep_source, validate_cdep_name
+from validate import validate_cdep_source, validate_cdep_name, validate_name
 
 
 struct Dependency(Copyable, Movable):
@@ -235,8 +235,9 @@ fn manifest_write(m: Manifest, path: String) raises:
     fs_write_file(path, content)
 
 
-fn manifest_add_dep(mut m: Manifest, name: String, git: String, version: String):
+fn manifest_add_dep(mut m: Manifest, name: String, git: String, version: String) raises:
     """Add or update a dependency in the manifest."""
+    validate_name(name)
     for i in range(len(m.deps)):
         if m.deps[i].name == name:
             m.deps[i].git = git

@@ -78,21 +78,46 @@ fn lockfile_read(path: String) raises -> LockFile:
     return lock^
 
 
+fn _json_escape(s: String) -> String:
+    """Escape a string for JSON: backslash, double-quote, and common control chars."""
+    var bytes = s.as_bytes()
+    var out = List[UInt8](capacity=len(bytes))
+    for i in range(len(bytes)):
+        var b = bytes[i]
+        if b == 34:    # "
+            out.append(92); out.append(34)   # \"
+        elif b == 92:  # \
+            out.append(92); out.append(92)   # \\
+        elif b == 10:  # \n
+            out.append(92); out.append(110)  # \n
+        elif b == 13:  # \r
+            out.append(92); out.append(114)  # \r
+        elif b == 9:   # \t
+            out.append(92); out.append(116)  # \t
+        else:
+            out.append(b)
+    return String(unsafe_from_utf8=out^)
+
+
 fn lockfile_write(lock: LockFile, path: String) raises:
-    """Write a LockFile to a JSON file."""
+    """Write a LockFile to a JSON file.
+    TODO: this function has no file locking — concurrent invocations in the same
+    directory could corrupt the lockfile. Use of flock() would require significant
+    FFI work; the use case (two parallel mojo-pkg install calls in the same dir)
+    is rare enough that this is acceptable for now."""
     var content = String("{\n")
-    content += "  \"mojo_version\": \"" + lock.mojo_version + "\",\n"
+    content += "  \"mojo_version\": \"" + _json_escape(lock.mojo_version) + "\",\n"
     content += "  \"packages\": [\n"
 
     for i in range(len(lock.packages)):
         if i > 0:
             content += ",\n"
         content += "    {\n"
-        content += "      \"name\": \"" + lock.packages[i].name + "\",\n"
-        content += "      \"version\": \"" + lock.packages[i].version + "\",\n"
-        content += "      \"source_url\": \"" + lock.packages[i].source_url + "\",\n"
-        content += "      \"sha256\": \"" + lock.packages[i].sha256 + "\",\n"
-        content += "      \"install_path\": \"" + lock.packages[i].install_path + "\"\n"
+        content += "      \"name\": \"" + _json_escape(lock.packages[i].name) + "\",\n"
+        content += "      \"version\": \"" + _json_escape(lock.packages[i].version) + "\",\n"
+        content += "      \"source_url\": \"" + _json_escape(lock.packages[i].source_url) + "\",\n"
+        content += "      \"sha256\": \"" + _json_escape(lock.packages[i].sha256) + "\",\n"
+        content += "      \"install_path\": \"" + _json_escape(lock.packages[i].install_path) + "\"\n"
         content += "    }"
 
     content += "\n  ]\n}\n"

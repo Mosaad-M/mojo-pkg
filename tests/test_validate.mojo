@@ -99,6 +99,7 @@ fn assert_raises_src(src: String, label: String) raises:
 # ─── validate_name ─────────────────────────────────────────────────────────────
 
 fn test_valid_names() raises:
+    assert_no_raise("a", "single char name")
     assert_no_raise("tls", "simple 3-char name")
     assert_no_raise("pkg2", "name with digit")
     assert_no_raise("my-pkg", "name with dash")
@@ -140,6 +141,15 @@ fn test_invalid_versions() raises:
     assert_raises_ver("1.0", "only two parts")
     assert_raises_ver("1.0.0.0", "four parts (three dots)")
     assert_raises_ver("1.0.a", "letter in version")
+    assert_raises_ver("0..0", "consecutive dots")
+    assert_raises_ver("1.0.", "trailing dot")
+    assert_raises_ver(".1.0", "leading dot")
+    # version longer than 32 chars
+    var long_ver = String("1")
+    for _ in range(32):
+        long_ver += "0"
+    long_ver += ".0.0"
+    assert_raises_ver(long_ver, "version > 32 chars")
     print("PASS: test_invalid_versions")
 
 
@@ -156,6 +166,9 @@ fn test_invalid_tarball_urls() raises:
     assert_raises_url("http://github.com/x/y.tar.gz", "http not https")
     assert_raises_url("https://gitlab.com/x/y.tar.gz", "non-github host")
     assert_raises_url("ftp://github.com/x/y.tar.gz", "ftp scheme")
+    assert_raises_url("https://github.com/", "no path after github.com/")
+    assert_raises_url("https://github.com/x/y;rm -rf ~", "semicolon in url")
+    assert_raises_url("https://github.com/x/y$(id)", "dollar sign in url")
     print("PASS: test_invalid_tarball_urls")
 
 

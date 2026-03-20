@@ -7,15 +7,17 @@ from fs import fs_write_file, fs_read_file, fs_exists, fs_home_dir, shared_lib_e
 
 
 fn get_include_flags(lock: LockFile) -> String:
-    """Returns space-separated -I flags for all installed packages."""
+    """Returns space-separated -I flags for all installed packages.
+    install_path is double-quoted so shell word-splitting does not break paths with spaces."""
     var flags = String("")
     for i in range(len(lock.packages)):
-        flags += "-I " + lock.packages[i].install_path + " "
+        flags += "-I \"" + lock.packages[i].install_path + "\" "
     return flags
 
 
 fn get_linker_flags(lock: LockFile) -> String:
-    """Returns -Xlinker flags for packages with C deps."""
+    """Returns -Xlinker flags for packages with C deps.
+    install_path is double-quoted; c_dep.name is already validated to safe chars."""
     var flags = String("")
     for i in range(len(lock.packages)):
         var toml_path = lock.packages[i].install_path + "/mojoproject.toml"
@@ -24,10 +26,10 @@ fn get_linker_flags(lock: LockFile) -> String:
         try:
             var sub_manifest = manifest_parse(toml_path)
             if len(sub_manifest.c_deps) > 0:
-                flags += "-Xlinker -L" + lock.packages[i].install_path + " "
+                flags += "-Xlinker -L\"" + lock.packages[i].install_path + "\" "
                 for j in range(len(sub_manifest.c_deps)):
                     flags += "-Xlinker -l" + sub_manifest.c_deps[j].name + " "
-                flags += "-Xlinker -rpath -Xlinker " + lock.packages[i].install_path + " "
+                flags += "-Xlinker -rpath -Xlinker \"" + lock.packages[i].install_path + "\" "
         except:
             pass
     return flags

@@ -655,7 +655,7 @@ fn parse_json(s: String) raises -> JsonValue:
     var data_ptr = s_copy.as_c_string_slice().unsafe_ptr().bitcast[UInt8]()
     var data_len = len(s)
     var pos: Int = 0
-    var result = _parse_value(data_ptr, data_len, pos)
+    var result = _parse_value(data_ptr, data_len, pos, 0)
     _skip_whitespace(data_ptr, data_len, pos)
     if pos != data_len:
         raise Error("unexpected trailing content at position " + String(pos))
@@ -675,9 +675,11 @@ fn _skip_whitespace(
 
 
 fn _parse_value(
-    data_ptr: UnsafePointer[UInt8, _], data_len: Int, mut pos: Int
+    data_ptr: UnsafePointer[UInt8, _], data_len: Int, mut pos: Int, depth: Int
 ) raises -> JsonValue:
     """Parse any JSON value starting at pos."""
+    if depth > 64:
+        raise Error("JSON parse error: nesting depth exceeded (max 64)")
     _skip_whitespace(data_ptr, data_len, pos)
     if pos >= data_len:
         raise Error("unexpected end of JSON input")
@@ -688,9 +690,9 @@ fn _parse_value(
         var s = _parse_string(data_ptr, data_len, pos)
         return json_string(s^)
     elif c == _LBRACE:
-        return _parse_object(data_ptr, data_len, pos)
+        return _parse_object(data_ptr, data_len, pos, depth + 1)
     elif c == _LBRACKET:
-        return _parse_array(data_ptr, data_len, pos)
+        return _parse_array(data_ptr, data_len, pos, depth + 1)
     elif c == _LOWER_T:
         _parse_true(data_ptr, data_len, pos)
         return json_bool(True)
@@ -884,9 +886,11 @@ fn _parse_number(
 
 
 fn _parse_object(
-    data_ptr: UnsafePointer[UInt8, _], data_len: Int, mut pos: Int
+    data_ptr: UnsafePointer[UInt8, _], data_len: Int, mut pos: Int, depth: Int
 ) raises -> JsonValue:
     """Parse a JSON object."""
+    if depth > 64:
+        raise Error("JSON parse error: nesting depth exceeded (max 64)")
     if (data_ptr + pos)[] != _LBRACE:
         raise Error("expected '{' at position " + String(pos))
     pos += 1  # skip '{'
@@ -912,7 +916,7 @@ fn _parse_object(
         pos += 1  # skip ':'
 
         # Parse value
-        var value = _parse_value(data_ptr, data_len, pos)
+        var value = _parse_value(data_ptr, data_len, pos, depth + 1)
 
         # Store in object
         obj._obj_ptr[].set(key^, value^)
@@ -931,9 +935,11 @@ fn _parse_object(
 
 
 fn _parse_array(
-    data_ptr: UnsafePointer[UInt8, _], data_len: Int, mut pos: Int
+    data_ptr: UnsafePointer[UInt8, _], data_len: Int, mut pos: Int, depth: Int
 ) raises -> JsonValue:
     """Parse a JSON array."""
+    if depth > 64:
+        raise Error("JSON parse error: nesting depth exceeded (max 64)")
     if (data_ptr + pos)[] != _LBRACKET:
         raise Error("expected '[' at position " + String(pos))
     pos += 1  # skip '['
@@ -946,7 +952,7 @@ fn _parse_array(
         return arr^
 
     while True:
-        var value = _parse_value(data_ptr, data_len, pos)
+        var value = _parse_value(data_ptr, data_len, pos, depth + 1)
         arr._arr_ptr[].append(value^)
 
         _skip_whitespace(data_ptr, data_len, pos)

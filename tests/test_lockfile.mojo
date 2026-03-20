@@ -130,6 +130,38 @@ fn test_duplicate_name_finds_first() raises:
     print("PASS: test_duplicate_name_finds_first")
 
 
+fn test_json_escape_double_quote_roundtrip() raises:
+    var lock = LockFile()
+    lock.packages.append(LockedPackage(
+        "tls",
+        "1.0.0",
+        "https://github.com/x/y.tar.gz",
+        "abc",
+        "/home/user/.mojo/packages/tls/\"quoted\"",
+    ))
+    lockfile_write(lock, "/tmp/test_lf_quote.json")
+    var lock2 = lockfile_read("/tmp/test_lf_quote.json")
+    assert_int_eq(len(lock2.packages), 1, "quote roundtrip: package count")
+    assert_eq(lock2.packages[0].install_path, "/home/user/.mojo/packages/tls/\"quoted\"", "quote roundtrip: install_path with double quote")
+    print("PASS: test_json_escape_double_quote_roundtrip")
+
+
+fn test_json_escape_backslash_roundtrip() raises:
+    var lock = LockFile()
+    lock.packages.append(LockedPackage(
+        "tls",
+        "1.0.0",
+        "https://github.com/x/y.tar.gz",
+        "abc",
+        "/home/user/.mojo/packages/tls/back\\slash",
+    ))
+    lockfile_write(lock, "/tmp/test_lf_backslash.json")
+    var lock2 = lockfile_read("/tmp/test_lf_backslash.json")
+    assert_int_eq(len(lock2.packages), 1, "backslash roundtrip: package count")
+    assert_eq(lock2.packages[0].install_path, "/home/user/.mojo/packages/tls/back\\slash", "backslash roundtrip: install_path with backslash")
+    print("PASS: test_json_escape_backslash_roundtrip")
+
+
 fn main() raises:
     print("=== LockFile Tests ===")
     test_empty_roundtrip()
@@ -143,5 +175,7 @@ fn main() raises:
     test_find_first()
     test_find_last()
     test_duplicate_name_finds_first()
+    test_json_escape_double_quote_roundtrip()
+    test_json_escape_backslash_roundtrip()
     print("")
     print("All lockfile tests passed!")

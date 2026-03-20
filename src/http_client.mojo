@@ -161,7 +161,7 @@ struct HttpClient(Movable):
 
     fn __init__(out self):
         self.user_agent = String("MojoHTTP/0.1")
-        self.allow_private_ips = True
+        self.allow_private_ips = False
         self._ca_bundle = List[X509Cert]()
         self._ca_loaded = False
         self._http_key = String("")

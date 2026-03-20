@@ -5,20 +5,64 @@ on:
     tags:
       - 'v*.*.*'
 
-permissions:
-  contents: write
-
 jobs:
-  release:
+  test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Clone tls
-        run: git clone --depth 1 https://github.com/Mosaad-M/tls.git ../tls_pure
+        run: |
+          git clone https://github.com/Mosaad-M/tls.git ../tls_pure
+          git -C ../tls_pure checkout bcab9378ed789c1f657f6e42702878306336673f
 
       - name: Install pixi
-        uses: prefix-dev/setup-pixi@v0.8.1
+        uses: prefix-dev/setup-pixi@ba3bb36eb2066252b2363392b7739741bb777659 # v0.8.1
+
+      - name: Run all tests
+        run: pixi run test
+
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Clone tls
+        run: |
+          git clone https://github.com/Mosaad-M/tls.git ../tls_pure
+          git -C ../tls_pure checkout bcab9378ed789c1f657f6e42702878306336673f
+
+      - name: Install pixi
+        uses: prefix-dev/setup-pixi@ba3bb36eb2066252b2363392b7739741bb777659 # v0.8.1
+
+      - name: Build binary
+        run: pixi run build
+
+      - name: Smoke test
+        run: |
+          ~/.mojo/bin/mojo-pkg version | grep -q "mojo-pkg"
+          ~/.mojo/bin/mojo-pkg help 2>&1 | grep -q "install"
+          echo "PASS: binary smoke tests"
+
+  release:
+    needs: [test, build-and-smoke]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Clone tls
+        run: |
+          git clone https://github.com/Mosaad-M/tls.git ../tls_pure
+          git -C ../tls_pure checkout bcab9378ed789c1f657f6e42702878306336673f
+
+      - name: Install pixi
+        uses: prefix-dev/setup-pixi@ba3bb36eb2066252b2363392b7739741bb777659 # v0.8.1
 
       - name: Build binary
         run: pixi run build
@@ -31,7 +75,7 @@ jobs:
         run: sha256sum mojo-pkg-linux-64.tar.gz > mojo-pkg-linux-64.tar.gz.sha256
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
         with:
           files: |
             mojo-pkg-linux-64.tar.gz

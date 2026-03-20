@@ -53,13 +53,46 @@ fn _strip_comment(s: String) -> String:
 
 
 fn _unquote(s: String) raises -> String:
-    """Strip surrounding double-quotes from a string value."""
+    """Strip surrounding double-quotes and unescape TOML basic string escape sequences.
+    Handles: \\" -> ", \\\\ -> \\, \\n -> newline, \\r -> CR, \\t -> tab.
+    \\uXXXX sequences are passed through literally (not decoded)."""
     var bytes = s.as_bytes()
     var n = len(bytes)
     if n >= 2 and bytes[0] == 34 and bytes[n - 1] == 34:  # "..."
         var out = List[UInt8](capacity=n - 2)
-        for i in range(1, n - 1):
-            out.append(bytes[i])
+        var i = 1
+        while i < n - 1:
+            var b = bytes[i]
+            if b == 92:  # backslash
+                i += 1
+                if i >= n - 1:
+                    out.append(92)
+                    break
+                var esc = bytes[i]
+                if esc == 34:        # \" -> "
+                    out.append(34)
+                elif esc == 92:      # \\ -> \
+                    out.append(92)
+                elif esc == 110:     # \n -> newline
+                    out.append(10)
+                elif esc == 114:     # \r -> CR
+                    out.append(13)
+                elif esc == 116:     # \t -> tab
+                    out.append(9)
+                elif esc == 117:     # \uXXXX -> pass through literally
+                    out.append(92)
+                    out.append(117)
+                    var hex_count = 0
+                    while hex_count < 4 and i + 1 < n - 1:
+                        i += 1
+                        out.append(bytes[i])
+                        hex_count += 1
+                else:
+                    out.append(92)
+                    out.append(esc)
+            else:
+                out.append(b)
+            i += 1
         return String(unsafe_from_utf8=out^)
     return s
 

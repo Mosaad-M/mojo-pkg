@@ -1,2 +1,0 @@
-fn greet():
-    print("greet")

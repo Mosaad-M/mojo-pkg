@@ -21,8 +21,9 @@ test-validate = "mojo run -I src -I $TLS_PURE tests/test_validate.mojo"
 test-lockfile = "mojo run -I src -I $TLS_PURE tests/test_lockfile.mojo"
 test-flags    = "mojo run -I src -I $TLS_PURE tests/test_flags.mojo"
 test-json     = "mojo run -I src -I $TLS_PURE tests/test_json.mojo"
-test-url      = "mojo run -I src -I $TLS_PURE tests/test_url.mojo"
+test-url       = "mojo run -I src -I $TLS_PURE tests/test_url.mojo"
+test-installer = "mojo run -I src -I $TLS_PURE tests/test_installer.mojo"
 
-test = { depends-on = ["test-toml", "test-manifest", "test-semver", "test-validate", "test-lockfile", "test-flags", "test-json", "test-url"] }
+test = { depends-on = ["test-toml", "test-manifest", "test-semver", "test-validate", "test-lockfile", "test-flags", "test-json", "test-url", "test-installer"] }
 
 test-build = "bash -c 'bash build_and_run.sh && ~/.mojo/bin/mojo-pkg version | grep -q mojo-pkg && echo PASS: binary smoke test'"

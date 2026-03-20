@@ -4,7 +4,7 @@
 from http_client import HttpClient
 from lockfile import LockedPackage
 from manifest import Manifest, CDependency, manifest_parse
-from fs import fs_exists, fs_mkdir_p, fs_write_bytes, fs_read_file, fs_run, fs_run_check, shared_lib_ext, gcc_shared_flag, c_compiler
+from fs import fs_exists, fs_mkdir_p, fs_write_bytes, fs_read_file, fs_run, fs_run_check, shared_lib_ext, gcc_shared_flag, c_compiler, fs_home_dir, _shell_quote
 from crypto.hash import sha256
 from validate import validate_name, validate_version, validate_tarball_url
 from flags import write_flags_cache
@@ -58,9 +58,16 @@ fn install_package(pkg: LockedPackage, mut client: HttpClient) raises:
         return
 
     print("  Downloading: " + pkg.name + " " + pkg.version)
-    # Use curl -sL with explicit -o and -- to prevent option injection
-    var tarball_path = "/tmp/mojo_pkg_" + pkg.name + "_" + pkg.version + ".tar.gz"
-    var dl_cmd = "curl -sL -o " + tarball_path + " -- " + pkg.source_url
+    # Use private per-user tmp dir to avoid shared-/tmp TOCTOU race
+    var tmp_dir = fs_home_dir() + "/.mojo/tmp"
+    fs_mkdir_p(tmp_dir)
+    # pkg.name and pkg.version are already validated (safe chars), so no quoting needed
+    # for the filename segments — but the full paths are quoted for safety
+    var tarball_path = tmp_dir + "/mojo_pkg_" + pkg.name + "_" + pkg.version + ".tar.gz"
+    var listing_tmp  = tmp_dir + "/mojo_pkg_list_" + pkg.name + "_" + pkg.version + ".txt"
+    # pkg.source_url goes after -- (handles flag injection); strict allowlist already
+    # prohibits shell metacharacters so no shell quoting needed for the URL itself
+    var dl_cmd = "curl -sL -o " + _shell_quote(tarball_path) + " -- " + pkg.source_url
     fs_run_check(dl_cmd)
 
     # Verify SHA256 — empty sha256 is a fatal error (no integrity bypass)
@@ -76,12 +83,9 @@ fn install_package(pkg: LockedPackage, mut client: HttpClient) raises:
         )
 
     # Guard against tarball path traversal before unpacking.
-    # pkg.name and pkg.version are already validated (alphanum/dots only), so
-    # they are safe to embed in the shell command without quoting.
-    var listing_tmp = "/tmp/mojo_pkg_list_" + pkg.name + "_" + pkg.version + ".txt"
-    fs_run_check("tar tzf " + tarball_path + " > " + listing_tmp)
+    fs_run_check("tar tzf " + _shell_quote(tarball_path) + " > " + _shell_quote(listing_tmp))
     # grep -F treats the pattern as a literal fixed string (no regex metacharacters)
-    var traversal_ret = fs_run("grep -F -q '..' " + listing_tmp)
+    var traversal_ret = fs_run("grep -F -q '..' " + _shell_quote(listing_tmp))
     if traversal_ret == 0:
         raise Error(
             "Path traversal detected in tarball for " + pkg.name
@@ -90,7 +94,7 @@ fn install_package(pkg: LockedPackage, mut client: HttpClient) raises:
 
     # Unpack
     fs_mkdir_p(pkg.install_path)
-    var cmd = "tar xzf " + tarball_path + " -C " + pkg.install_path + " --strip-components=1"
+    var cmd = "tar xzf " + _shell_quote(tarball_path) + " -C " + _shell_quote(pkg.install_path) + " --strip-components=1"
     fs_run_check(cmd)
 
     print("  Installed: " + pkg.name + " " + pkg.version + " → " + pkg.install_path)
@@ -114,9 +118,10 @@ fn _compile_c_deps(install_path: String, c_deps: List[CDependency]) raises:
     var compiler = c_compiler()
 
     for i in range(len(c_deps)):
-        var src = install_path + "/" + c_deps[i].source
-        var out_lib = install_path + "/lib" + c_deps[i].name + ext
-        if fs_exists(out_lib):
+        var src      = _shell_quote(install_path + "/" + c_deps[i].source)
+        var out_lib  = _shell_quote(install_path + "/lib" + c_deps[i].name + ext)
+        var out_lib_path = install_path + "/lib" + c_deps[i].name + ext
+        if fs_exists(out_lib_path):
             continue
         print("  Compiling C dep: " + c_deps[i].name)
         var cmd = compiler + " " + flag + " -fPIC -o " + out_lib + " " + src

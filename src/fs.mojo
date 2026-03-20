@@ -71,11 +71,32 @@ fn fs_home_dir() -> String:
     return getenv("HOME", "/tmp")
 
 
+# ─── Shell quoting ────────────────────────────────────────────────────────────
+
+fn _shell_quote(s: String) -> String:
+    """Wrap s in single quotes, escaping any embedded single quotes (x -> '\\''x).
+    Makes shell commands safe even when paths contain spaces or metacharacters."""
+    var bytes = s.as_bytes()
+    var out = List[UInt8](capacity=len(bytes) + 2)
+    out.append(39)  # opening '
+    for i in range(len(bytes)):
+        var b = bytes[i]
+        if b == 39:  # single quote -> '\''
+            out.append(39)   # '
+            out.append(92)   # \
+            out.append(39)   # '
+            out.append(39)   # '
+        else:
+            out.append(b)
+    out.append(39)  # closing '
+    return String(unsafe_from_utf8=out^)
+
+
 # ─── mkdir -p ─────────────────────────────────────────────────────────────────
 
 fn fs_mkdir_p(path: String) raises:
     """Create directory and all parents. Like mkdir -p."""
-    var cmd = "mkdir -p " + path
+    var cmd = "mkdir -p " + _shell_quote(path)
     var ret = fs_run(cmd)
     if ret != 0:
         raise Error("mkdir -p failed for: " + path)
