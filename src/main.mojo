@@ -10,13 +10,13 @@
 
 from sys import argv
 from http_client import HttpClient
-from manifest import Manifest, manifest_parse, manifest_write, manifest_add_dep
-from lockfile import LockFile, lockfile_read, lockfile_write
+from manifest import Manifest, manifest_parse, manifest_write, manifest_add_dep, manifest_remove_dep
+from lockfile import LockFile, lockfile_read, lockfile_write, lockfile_find
 from resolver import resolve
 from installer import install_all
 from flags import write_flags_file, print_flags
 from registry import registry_fetch_package, registry_search, PackageMeta
-from fs import fs_exists, fs_mkdir_p, fs_home_dir
+from fs import fs_exists, fs_mkdir_p, fs_home_dir, fs_rm_rf
 
 
 fn print_usage():
@@ -24,7 +24,9 @@ fn print_usage():
     print("")
     print("Usage:")
     print("  mojo-pkg install          Resolve and install dependencies")
+    print("  mojo-pkg update           Re-resolve deps to latest versions")
     print("  mojo-pkg add <name>       Add a dependency from the registry")
+    print("  mojo-pkg remove <name>    Remove a dependency")
     print("  mojo-pkg flags            Print -I/-Xlinker flags to stdout")
     print("  mojo-pkg search [query]   Search packages in the registry")
     print("  mojo-pkg list             List locked packages")
@@ -61,6 +63,88 @@ fn cmd_install() raises:
     print("Wrote .mojo_flags")
     print("")
     print("Done! Use $(cat .mojo_flags) in your mojo build command.")
+
+
+fn cmd_update() raises:
+    """Re-resolve all deps to latest satisfying versions, update mojo.lock."""
+    if not fs_exists("mojoproject.toml"):
+        raise Error("No mojoproject.toml found in current directory")
+
+    print("Reading mojoproject.toml...")
+    var manifest = manifest_parse("mojoproject.toml")
+    var client = HttpClient()
+
+    # Snapshot old lock for diffing
+    var old_lock = LockFile()
+    if fs_exists("mojo.lock"):
+        old_lock = lockfile_read("mojo.lock")
+
+    # Force re-resolve (ignore existing mojo.lock)
+    print("Re-resolving dependencies...")
+    var lock = resolve(manifest, client)
+    lockfile_write(lock, "mojo.lock")
+
+    # Report changes
+    var n_changed = 0
+    for i in range(len(lock.packages)):
+        var name = lock.packages[i].name
+        var new_ver = lock.packages[i].version
+        var old_idx = lockfile_find(old_lock, name)
+        if old_idx >= 0:
+            var old_ver = old_lock.packages[old_idx].version
+            if old_ver != new_ver:
+                print("  Upgraded: " + name + " " + old_ver + " -> " + new_ver)
+                n_changed += 1
+            else:
+                print("  Unchanged: " + name + " " + new_ver)
+        else:
+            print("  Added: " + name + " " + new_ver)
+            n_changed += 1
+
+    install_all(lock.packages, client)
+    write_flags_file(lock, ".mojo_flags")
+    print(String(n_changed) + " package(s) changed.")
+
+
+fn cmd_remove(pkg_name: String) raises:
+    """Remove a package from mojoproject.toml, re-resolve, and delete its files."""
+    if len(pkg_name) == 0:
+        raise Error("Usage: mojo-pkg remove <package-name>")
+
+    if not fs_exists("mojoproject.toml"):
+        raise Error("No mojoproject.toml found in current directory")
+
+    var manifest = manifest_parse("mojoproject.toml")
+    manifest_remove_dep(manifest, pkg_name)  # raises if not a direct dep
+    manifest_write(manifest, "mojoproject.toml")
+    print("  Removed " + pkg_name + " from mojoproject.toml")
+
+    # Snapshot old lock (need install_path before re-resolving)
+    var old_lock = LockFile()
+    if fs_exists("mojo.lock"):
+        old_lock = lockfile_read("mojo.lock")
+
+    var client = HttpClient()
+    print("Re-resolving dependencies...")
+    var new_lock = resolve(manifest, client)
+    lockfile_write(new_lock, "mojo.lock")
+
+    # If still in new lock it's a transitive dep — warn and keep
+    if lockfile_find(new_lock, pkg_name) >= 0:
+        print("  Warning: '" + pkg_name + "' is still required transitively — keeping files")
+    else:
+        var old_idx = lockfile_find(old_lock, pkg_name)
+        if old_idx >= 0:
+            var install_path = old_lock.packages[old_idx].install_path
+            print("  Removing " + install_path + "...")
+            try:
+                fs_rm_rf(install_path)
+            except e:
+                print("  Warning: could not delete directory: " + String(e))
+
+    install_all(new_lock.packages, client)
+    write_flags_file(new_lock, ".mojo_flags")
+    print("Removed " + pkg_name)
 
 
 fn cmd_add(pkg_name: String) raises:
@@ -155,11 +239,16 @@ fn main() raises:
 
     if cmd == "install":
         cmd_install()
+    elif cmd == "update":
+        cmd_update()
     elif cmd == "add":
         var pkg = args[2] if len(args) > 2 else ""
         cmd_add(pkg)
     elif cmd == "flags":
         cmd_flags()
+    elif cmd == "remove":
+        var pkg = args[2] if len(args) > 2 else ""
+        cmd_remove(pkg)
     elif cmd == "search":
         var query = args[2] if len(args) > 2 else ""
         cmd_search(query)

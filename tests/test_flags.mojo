@@ -47,7 +47,7 @@ fn test_include_single() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("tls", "1.0.0", "", "", "/mock/tls/path"))
     var flags = get_include_flags(lock)
-    assert_contains(flags, "-I \"/mock/tls/path\"", "include single: -I flag present")
+    assert_contains(flags, "-I /mock/tls/path", "include single: -I flag present")
     print("PASS: test_include_single")
 
 
@@ -56,8 +56,8 @@ fn test_include_two() raises:
     lock.packages.append(LockedPackage("tls", "1.0.0", "", "", "/mock/tls"))
     lock.packages.append(LockedPackage("tcp", "1.0.0", "", "", "/mock/tcp"))
     var flags = get_include_flags(lock)
-    assert_contains(flags, "-I \"/mock/tls\"", "include two: tls flag")
-    assert_contains(flags, "-I \"/mock/tcp\"", "include two: tcp flag")
+    assert_contains(flags, "-I /mock/tls", "include two: tls flag")
+    assert_contains(flags, "-I /mock/tcp", "include two: tcp flag")
     print("PASS: test_include_two")
 
 
@@ -118,7 +118,7 @@ fn test_linker_l_flag() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("tcp", "1.0.0", "", "", "/tmp"))
     var flags = get_linker_flags(lock)
-    assert_contains(flags, "-Xlinker -L\"/tmp\"", "linker L flag: -L path present")
+    assert_contains(flags, "-Xlinker -L/tmp", "linker L flag: -L path present")
     print("PASS: test_linker_l_flag")
 
 
@@ -144,7 +144,7 @@ fn test_write_flags_file_content() raises:
     lock.packages.append(LockedPackage("tls", "1.0.0", "", "", "/mock/tls"))
     write_flags_file(lock, "/tmp/test_flags_content.flags")
     var content = fs_read_file("/tmp/test_flags_content.flags")
-    assert_contains(content, "-I \"/mock/tls\"", "write_flags_file: content contains -I flag")
+    assert_contains(content, "-I /mock/tls", "write_flags_file: content contains -I flag")
     print("PASS: test_write_flags_file_content")
 
 

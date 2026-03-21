@@ -206,3 +206,10 @@ fn fs_run_check(cmd: String) raises:
     var ret = fs_run(cmd)
     if ret != 0:
         raise Error("Command failed (exit " + String(ret) + "): " + cmd)
+
+
+fn fs_rm_rf(path: String) raises:
+    """Remove a directory tree. Like rm -rf."""
+    var ret = fs_run("rm -rf " + _shell_quote(path))
+    if ret != 0:
+        raise Error("rm -rf failed: " + path)

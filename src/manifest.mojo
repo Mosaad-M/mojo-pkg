@@ -244,3 +244,18 @@ fn manifest_add_dep(mut m: Manifest, name: String, git: String, version: String)
             m.deps[i].version = version
             return
     m.deps.append(Dependency(name, git, version))
+
+
+fn manifest_remove_dep(mut m: Manifest, name: String) raises:
+    """Remove a direct dependency by name. Raises if not found."""
+    validate_name(name)
+    var new_deps = List[Dependency]()
+    var found = False
+    for i in range(len(m.deps)):
+        if m.deps[i].name == name:
+            found = True
+        else:
+            new_deps.append(m.deps[i].copy())
+    if not found:
+        raise Error("'" + name + "' not found in [dependencies]")
+    m.deps = new_deps^

@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Clone tls
         run: |
@@ -19,7 +19,7 @@ jobs:
           git -C ../tls_pure checkout bcab9378ed789c1f657f6e42702878306336673f
 
       - name: Install pixi
-        uses: prefix-dev/setup-pixi@ba3bb36eb2066252b2363392b7739741bb777659 # v0.8.1
+        uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
 
       - name: Run all tests
         run: pixi run test
@@ -29,7 +29,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Clone tls
         run: |
@@ -37,7 +37,7 @@ jobs:
           git -C ../tls_pure checkout bcab9378ed789c1f657f6e42702878306336673f
 
       - name: Install pixi
-        uses: prefix-dev/setup-pixi@ba3bb36eb2066252b2363392b7739741bb777659 # v0.8.1
+        uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
 
       - name: Build binary
         run: pixi run build
@@ -54,7 +54,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Clone tls
         run: |
@@ -62,7 +62,7 @@ jobs:
           git -C ../tls_pure checkout bcab9378ed789c1f657f6e42702878306336673f
 
       - name: Install pixi
-        uses: prefix-dev/setup-pixi@ba3bb36eb2066252b2363392b7739741bb777659 # v0.8.1
+        uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
 
       - name: Build binary
         run: pixi run build
@@ -75,7 +75,7 @@ jobs:
         run: sha256sum mojo-pkg-linux-64.tar.gz > mojo-pkg-linux-64.tar.gz.sha256
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1 (latest; node20 — update when node24 version released)
         with:
           files: |
             mojo-pkg-linux-64.tar.gz
