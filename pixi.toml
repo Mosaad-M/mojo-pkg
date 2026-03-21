@@ -5,7 +5,7 @@ platforms = ["linux-64"]
 version = "0.1.0"
 
 [dependencies]
-mojo = ">=0.26.1"
+mojo = ">=0.26.2"
 
 [activation]
 env = { TLS_PURE = "../tls_pure" }
