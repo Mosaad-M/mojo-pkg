@@ -71,7 +71,7 @@ def validate_version(version: String) raises:
 def validate_tarball_url(url: String) raises:
     """Reject tarball URLs that don't start with https://github.com/ and contain
     any character outside the strict allowlist A-Za-z0-9/-_.:%=?&#@."""
-    alias PREFIX = "https://github.com/"
+    comptime PREFIX = "https://github.com/"
     var prefix_bytes = PREFIX.as_bytes()
     var url_bytes = url.as_bytes()
     if len(url_bytes) < len(prefix_bytes):

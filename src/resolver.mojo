@@ -100,12 +100,11 @@ def semver_satisfies(version: String, constraint: String) raises -> Bool:
     var v = semver_parse(version)
     var bytes = constraint.as_bytes()
 
-    # Determine operator
-    var op = String("")
+    # Determine operator (defaults: ">=" with no prefix to skip)
+    var op = ">="
     var ver_start = 0
 
     if len(bytes) >= 2 and bytes[0] == 62 and bytes[1] == 61:  # >=
-        op = ">="
         ver_start = 2
     elif len(bytes) >= 2 and bytes[0] == 60 and bytes[1] == 61:  # <=
         op = "<="
@@ -122,9 +121,6 @@ def semver_satisfies(version: String, constraint: String) raises -> Bool:
     elif len(bytes) >= 1 and bytes[0] == 94:  # ^
         op = "^"
         ver_start = 1
-    else:
-        op = ">="
-        ver_start = 0
 
     # Extract version string from constraint
     var ver_bytes = List[UInt8](capacity=len(bytes) - ver_start)

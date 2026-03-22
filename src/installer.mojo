@@ -12,7 +12,7 @@ from flags import write_flags_cache
 
 def _bytes_to_hex(data: List[UInt8]) -> String:
     """Convert a byte list to a lowercase hex string."""
-    alias HEX = "0123456789abcdef"
+    comptime HEX = "0123456789abcdef"
     var hb = HEX.as_bytes()
     var out = List[UInt8](capacity=len(data) * 2)
     for i in range(len(data)):

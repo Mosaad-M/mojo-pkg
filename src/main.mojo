@@ -48,6 +48,17 @@ def cmd_install() raises:
     if fs_exists("mojo.lock"):
         print("Using existing mojo.lock...")
         lock = lockfile_read("mojo.lock")
+        # Recompute install_path based on current $HOME (lock file may have
+        # been created on a different machine or in CI with a different home).
+        var current_home = fs_home_dir()
+        for i in range(len(lock.packages)):
+            lock.packages[i].install_path = (
+                current_home
+                + "/.mojo/packages/"
+                + lock.packages[i].name
+                + "/"
+                + lock.packages[i].version
+            )
     else:
         print("Resolving dependencies...")
         lock = resolve(manifest, client)

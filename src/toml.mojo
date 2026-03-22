@@ -4,7 +4,7 @@
 # section headers [section], comments (#).
 # Does NOT support: arrays of tables [[...]], multi-line strings, dates.
 
-from collections import Dict
+from std.collections import Dict
 
 
 struct TomlDoc(Movable):
