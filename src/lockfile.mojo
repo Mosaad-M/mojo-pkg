@@ -2,7 +2,7 @@
 # mojo.lock read/write using json/ module.
 
 from json import JsonValue, parse_json
-from fs import fs_read_file, fs_write_file, fs_exists
+from fs import fs_read_file, fs_write_file, fs_exists, fs_home_dir
 
 
 struct LockedPackage(Copyable, Movable):
@@ -66,12 +66,17 @@ def lockfile_read(path: String) raises -> LockFile:
         var n = len(pkgs)
         for i in range(n):
             var pkg = pkgs.get(i)
+            var pkg_name = pkg.get_string("name")
+            var pkg_ver = pkg.get_string("version")
+            # Recompute install_path from current $HOME so the lock file
+            # is portable across machines and CI environments.
+            var install_path = fs_home_dir() + "/.mojo/packages/" + pkg_name + "/" + pkg_ver
             var lp = LockedPackage(
-                pkg.get_string("name"),
-                pkg.get_string("version"),
+                pkg_name,
+                pkg_ver,
                 pkg.get_string("source_url"),
                 pkg.get_string("sha256"),
-                pkg.get_string("install_path"),
+                install_path,
             )
             lock.packages.append(lp^)
 
