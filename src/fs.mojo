@@ -5,8 +5,8 @@
 # NOTE: unsafe_ptr() in Mojo 0.26+ does not guarantee a null byte at data[len].
 # All FFI functions that need C strings use alloc+copy+null-terminate explicitly.
 
-from ffi import external_call
-from memory.unsafe_pointer import alloc
+from std.ffi import external_call
+from std.memory.unsafe_pointer import alloc
 from os import getenv
 
 
