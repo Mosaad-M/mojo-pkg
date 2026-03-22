@@ -5,22 +5,22 @@ from lockfile import LockFile, LockedPackage, lockfile_read, lockfile_write, loc
 from fs import fs_write_file, fs_exists
 
 
-fn assert_eq(a: String, b: String, label: String) raises:
+def assert_eq(a: String, b: String, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected '" + b + "', got '" + a + "'")
 
 
-fn assert_int_eq(a: Int, b: Int, label: String) raises:
+def assert_int_eq(a: Int, b: Int, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected " + String(b) + ", got " + String(a))
 
 
-fn assert_true(val: Bool, label: String) raises:
+def assert_true(val: Bool, label: String) raises:
     if not val:
         raise Error("FAIL: " + label + " — expected True, got False")
 
 
-fn test_empty_roundtrip() raises:
+def test_empty_roundtrip() raises:
     var lock = LockFile()
     lockfile_write(lock, "/tmp/test_lf_empty.json")
     var lock2 = lockfile_read("/tmp/test_lf_empty.json")
@@ -29,7 +29,7 @@ fn test_empty_roundtrip() raises:
     print("PASS: test_empty_roundtrip")
 
 
-fn test_single_package_roundtrip() raises:
+def test_single_package_roundtrip() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage(
         "tls",
@@ -49,7 +49,7 @@ fn test_single_package_roundtrip() raises:
     print("PASS: test_single_package_roundtrip")
 
 
-fn test_multi_package_roundtrip() raises:
+def test_multi_package_roundtrip() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("tls", "1.0.0", "https://github.com/Mosaad-M/tls/archive/v1.0.0.tar.gz", "sha1", "/path/tls"))
     lock.packages.append(LockedPackage("tcp", "2.0.0", "https://github.com/Mosaad-M/tcp/archive/v2.0.0.tar.gz", "sha2", "/path/tcp"))
@@ -64,7 +64,7 @@ fn test_multi_package_roundtrip() raises:
     print("PASS: test_multi_package_roundtrip")
 
 
-fn test_lockfile_find_found() raises:
+def test_lockfile_find_found() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("tls", "1.0.0", "", "", "/path/tls"))
     lock.packages.append(LockedPackage("tcp", "1.0.0", "", "", "/path/tcp"))
@@ -75,27 +75,27 @@ fn test_lockfile_find_found() raises:
     print("PASS: test_lockfile_find_found")
 
 
-fn test_lockfile_find_not_found() raises:
+def test_lockfile_find_not_found() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("tls", "1.0.0", "", "", ""))
     assert_int_eq(lockfile_find(lock, "nonexistent"), -1, "find: not found returns -1")
     print("PASS: test_lockfile_find_not_found")
 
 
-fn test_lockfile_find_empty() raises:
+def test_lockfile_find_empty() raises:
     var lock = LockFile()
     assert_int_eq(lockfile_find(lock, "anything"), -1, "find: empty lock returns -1")
     print("PASS: test_lockfile_find_empty")
 
 
-fn test_read_nonexistent() raises:
+def test_read_nonexistent() raises:
     var lock = lockfile_read("/tmp/nonexistent_lockfile_xyz.json")
     assert_int_eq(len(lock.packages), 0, "nonexistent: empty packages")
     assert_eq(lock.mojo_version, "0.26.1", "nonexistent: default mojo_version")
     print("PASS: test_read_nonexistent")
 
 
-fn test_mojo_version_written() raises:
+def test_mojo_version_written() raises:
     var lock = LockFile()
     lock.mojo_version = String("0.99.0")
     lockfile_write(lock, "/tmp/test_lf_version.json")
@@ -105,7 +105,7 @@ fn test_mojo_version_written() raises:
     print("PASS: test_mojo_version_written")
 
 
-fn test_find_first() raises:
+def test_find_first() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("alpha", "1.0.0", "", "", ""))
     lock.packages.append(LockedPackage("beta", "1.0.0", "", "", ""))
@@ -113,7 +113,7 @@ fn test_find_first() raises:
     print("PASS: test_find_first")
 
 
-fn test_find_last() raises:
+def test_find_last() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("alpha", "1.0.0", "", "", ""))
     lock.packages.append(LockedPackage("beta", "1.0.0", "", "", ""))
@@ -122,7 +122,7 @@ fn test_find_last() raises:
     print("PASS: test_find_last")
 
 
-fn test_duplicate_name_finds_first() raises:
+def test_duplicate_name_finds_first() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("tls", "1.0.0", "", "", "/path1"))
     lock.packages.append(LockedPackage("tls", "2.0.0", "", "", "/path2"))
@@ -130,7 +130,7 @@ fn test_duplicate_name_finds_first() raises:
     print("PASS: test_duplicate_name_finds_first")
 
 
-fn test_json_escape_double_quote_roundtrip() raises:
+def test_json_escape_double_quote_roundtrip() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage(
         "tls",
@@ -146,7 +146,7 @@ fn test_json_escape_double_quote_roundtrip() raises:
     print("PASS: test_json_escape_double_quote_roundtrip")
 
 
-fn test_json_escape_backslash_roundtrip() raises:
+def test_json_escape_backslash_roundtrip() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage(
         "tls",
@@ -162,7 +162,7 @@ fn test_json_escape_backslash_roundtrip() raises:
     print("PASS: test_json_escape_backslash_roundtrip")
 
 
-fn main() raises:
+def main() raises:
     print("=== LockFile Tests ===")
     test_empty_roundtrip()
     test_single_package_roundtrip()

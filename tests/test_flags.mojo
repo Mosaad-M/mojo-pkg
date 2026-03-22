@@ -6,27 +6,27 @@ from lockfile import LockFile, LockedPackage
 from fs import fs_write_file, fs_exists, fs_read_file
 
 
-fn assert_eq(a: String, b: String, label: String) raises:
+def assert_eq(a: String, b: String, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected '" + b + "', got '" + a + "'")
 
 
-fn assert_true(val: Bool, label: String) raises:
+def assert_true(val: Bool, label: String) raises:
     if not val:
         raise Error("FAIL: " + label + " — expected True, got False")
 
 
-fn assert_contains(haystack: String, needle: String, label: String) raises:
+def assert_contains(haystack: String, needle: String, label: String) raises:
     if haystack.find(needle) < 0:
         raise Error("FAIL: " + label + " — expected '" + needle + "' in '" + haystack + "'")
 
 
-fn assert_not_contains(haystack: String, needle: String, label: String) raises:
+def assert_not_contains(haystack: String, needle: String, label: String) raises:
     if haystack.find(needle) >= 0:
         raise Error("FAIL: " + label + " — did not expect '" + needle + "' in '" + haystack + "'")
 
 
-fn test_include_empty() raises:
+def test_include_empty() raises:
     var lock = LockFile()
     var flags = get_include_flags(lock)
     # Empty lock → empty flags (may have trailing space — trim for comparison)
@@ -43,7 +43,7 @@ fn test_include_empty() raises:
     print("PASS: test_include_empty")
 
 
-fn test_include_single() raises:
+def test_include_single() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("tls", "1.0.0", "", "", "/mock/tls/path"))
     var flags = get_include_flags(lock)
@@ -51,7 +51,7 @@ fn test_include_single() raises:
     print("PASS: test_include_single")
 
 
-fn test_include_two() raises:
+def test_include_two() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("tls", "1.0.0", "", "", "/mock/tls"))
     lock.packages.append(LockedPackage("tcp", "1.0.0", "", "", "/mock/tcp"))
@@ -61,7 +61,7 @@ fn test_include_two() raises:
     print("PASS: test_include_two")
 
 
-fn test_linker_no_manifest() raises:
+def test_linker_no_manifest() raises:
     # Package whose install_path has no mojoproject.toml
     var lock = LockFile()
     lock.packages.append(LockedPackage("tls", "1.0.0", "", "", "/nonexistent/path"))
@@ -70,7 +70,7 @@ fn test_linker_no_manifest() raises:
     print("PASS: test_linker_no_manifest")
 
 
-fn test_linker_no_c_deps() raises:
+def test_linker_no_c_deps() raises:
     # Write a mojoproject.toml with no [c-dependencies] to /tmp
     var toml = String("""
 [package]
@@ -91,7 +91,7 @@ requires = ">=0.26.1"
     print("PASS: test_linker_no_c_deps")
 
 
-fn test_linker_with_c_dep() raises:
+def test_linker_with_c_dep() raises:
     # Write a mojoproject.toml with [c-dependencies] to /tmp
     # Use /tmp as install_path so toml is at /tmp/mojoproject.toml
     var toml = String("""
@@ -113,7 +113,7 @@ errno_helper = "errno_helper.c"
     print("PASS: test_linker_with_c_dep")
 
 
-fn test_linker_l_flag() raises:
+def test_linker_l_flag() raises:
     # Uses /tmp/mojoproject.toml written by test_linker_with_c_dep
     var lock = LockFile()
     lock.packages.append(LockedPackage("tcp", "1.0.0", "", "", "/tmp"))
@@ -122,7 +122,7 @@ fn test_linker_l_flag() raises:
     print("PASS: test_linker_l_flag")
 
 
-fn test_linker_rpath() raises:
+def test_linker_rpath() raises:
     # Uses /tmp/mojoproject.toml written above
     var lock = LockFile()
     lock.packages.append(LockedPackage("tcp", "1.0.0", "", "", "/tmp"))
@@ -131,7 +131,7 @@ fn test_linker_rpath() raises:
     print("PASS: test_linker_rpath")
 
 
-fn test_write_flags_file_creates() raises:
+def test_write_flags_file_creates() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("tls", "1.0.0", "", "", "/mock/tls"))
     write_flags_file(lock, "/tmp/test_flags_output.flags")
@@ -139,7 +139,7 @@ fn test_write_flags_file_creates() raises:
     print("PASS: test_write_flags_file_creates")
 
 
-fn test_write_flags_file_content() raises:
+def test_write_flags_file_content() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("tls", "1.0.0", "", "", "/mock/tls"))
     write_flags_file(lock, "/tmp/test_flags_content.flags")
@@ -148,7 +148,7 @@ fn test_write_flags_file_content() raises:
     print("PASS: test_write_flags_file_content")
 
 
-fn test_write_flags_no_trailing_space() raises:
+def test_write_flags_no_trailing_space() raises:
     var lock = LockFile()
     lock.packages.append(LockedPackage("tls", "1.0.0", "", "", "/mock/tls"))
     write_flags_file(lock, "/tmp/test_flags_nospace.flags")
@@ -162,7 +162,7 @@ fn test_write_flags_no_trailing_space() raises:
     print("PASS: test_write_flags_no_trailing_space")
 
 
-fn main() raises:
+def main() raises:
     print("=== Flags Tests ===")
     # Write the c-dep toml first (needed by multiple tests)
     var toml = String("""

@@ -13,21 +13,21 @@ struct LockedPackage(Copyable, Movable):
     var sha256: String
     var install_path: String
 
-    fn __init__(out self, name: String, version: String, source_url: String, sha256: String, install_path: String):
+    def __init__(out self, name: String, version: String, source_url: String, sha256: String, install_path: String):
         self.name = name
         self.version = version
         self.source_url = source_url
         self.sha256 = sha256
         self.install_path = install_path
 
-    fn __copyinit__(out self, copy: Self):
+    def __copyinit__(out self, copy: Self):
         self.name = copy.name
         self.version = copy.version
         self.source_url = copy.source_url
         self.sha256 = copy.sha256
         self.install_path = copy.install_path
 
-    fn __moveinit__(out self, deinit take: Self):
+    def __moveinit__(out self, deinit take: Self):
         self.name = take.name^
         self.version = take.version^
         self.source_url = take.source_url^
@@ -40,16 +40,16 @@ struct LockFile(Movable):
     var mojo_version: String
     var packages: List[LockedPackage]
 
-    fn __init__(out self):
+    def __init__(out self):
         self.mojo_version = String("0.26.1")
         self.packages = List[LockedPackage]()
 
-    fn __moveinit__(out self, deinit take: Self):
+    def __moveinit__(out self, deinit take: Self):
         self.mojo_version = take.mojo_version^
         self.packages = take.packages^
 
 
-fn lockfile_read(path: String) raises -> LockFile:
+def lockfile_read(path: String) raises -> LockFile:
     """Read and parse a mojo.lock JSON file."""
     var lock = LockFile()
     if not fs_exists(path):
@@ -78,7 +78,7 @@ fn lockfile_read(path: String) raises -> LockFile:
     return lock^
 
 
-fn _json_escape(s: String) -> String:
+def _json_escape(s: String) -> String:
     """Escape a string for JSON: backslash, double-quote, and common control chars."""
     var bytes = s.as_bytes()
     var out = List[UInt8](capacity=len(bytes))
@@ -99,7 +99,7 @@ fn _json_escape(s: String) -> String:
     return String(unsafe_from_utf8=out^)
 
 
-fn lockfile_write(lock: LockFile, path: String) raises:
+def lockfile_write(lock: LockFile, path: String) raises:
     """Write a LockFile to a JSON file.
     TODO: this function has no file locking — concurrent invocations in the same
     directory could corrupt the lockfile. Use of flock() would require significant
@@ -124,7 +124,7 @@ fn lockfile_write(lock: LockFile, path: String) raises:
     fs_write_file(path, content)
 
 
-fn lockfile_find(lock: LockFile, name: String) -> Int:
+def lockfile_find(lock: LockFile, name: String) -> Int:
     """Find a package by name in the lockfile. Returns index or -1."""
     for i in range(len(lock.packages)):
         if lock.packages[i].name == name:

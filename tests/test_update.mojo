@@ -5,21 +5,21 @@
 from lockfile import LockFile, LockedPackage, lockfile_find
 
 
-fn assert_eq(a: String, b: String, label: String) raises:
+def assert_eq(a: String, b: String, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected '" + b + "', got '" + a + "'")
 
 
-fn assert_int_eq(a: Int, b: Int, label: String) raises:
+def assert_int_eq(a: Int, b: Int, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected " + String(b) + ", got " + String(a))
 
 
-fn make_pkg(name: String, version: String) -> LockedPackage:
+def make_pkg(name: String, version: String) -> LockedPackage:
     return LockedPackage(name, version, "https://example.com/" + name + ".tar.gz", "abc123", "/home/user/.mojo/packages/" + name + "/" + version)
 
 
-fn test_lockfile_find_present() raises:
+def test_lockfile_find_present() raises:
     var lock = LockFile()
     lock.packages.append(make_pkg("tls", "1.0.0"))
     lock.packages.append(make_pkg("tcp", "1.1.0"))
@@ -28,20 +28,20 @@ fn test_lockfile_find_present() raises:
     print("PASS: test_lockfile_find_present")
 
 
-fn test_lockfile_find_missing() raises:
+def test_lockfile_find_missing() raises:
     var lock = LockFile()
     lock.packages.append(make_pkg("tls", "1.0.0"))
     assert_int_eq(lockfile_find(lock, "json"), -1, "find missing returns -1")
     print("PASS: test_lockfile_find_missing")
 
 
-fn test_lockfile_find_empty() raises:
+def test_lockfile_find_empty() raises:
     var lock = LockFile()
     assert_int_eq(lockfile_find(lock, "anything"), -1, "empty lock returns -1")
     print("PASS: test_lockfile_find_empty")
 
 
-fn test_diff_unchanged() raises:
+def test_diff_unchanged() raises:
     """Simulate update where version is unchanged."""
     var old_lock = LockFile()
     old_lock.packages.append(make_pkg("tls", "1.0.0"))
@@ -65,7 +65,7 @@ fn test_diff_unchanged() raises:
     print("PASS: test_diff_unchanged")
 
 
-fn test_diff_upgraded() raises:
+def test_diff_upgraded() raises:
     """Simulate update where one package is upgraded."""
     var old_lock = LockFile()
     old_lock.packages.append(make_pkg("tls", "1.0.0"))
@@ -100,7 +100,7 @@ fn test_diff_upgraded() raises:
     print("PASS: test_diff_upgraded")
 
 
-fn test_diff_added() raises:
+def test_diff_added() raises:
     """Simulate update where a new transitive dep appears."""
     var old_lock = LockFile()
     old_lock.packages.append(make_pkg("tls", "1.0.0"))
@@ -125,7 +125,7 @@ fn test_diff_added() raises:
     print("PASS: test_diff_added")
 
 
-fn test_diff_no_old_lock() raises:
+def test_diff_no_old_lock() raises:
     """Simulate first-time install (no old lock): all packages are 'added'."""
     var old_lock = LockFile()  # empty
 
@@ -143,7 +143,7 @@ fn test_diff_no_old_lock() raises:
     print("PASS: test_diff_no_old_lock")
 
 
-fn main() raises:
+def main() raises:
     print("=== Update Diff Tests ===")
     test_lockfile_find_present()
     test_lockfile_find_missing()

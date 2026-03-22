@@ -6,22 +6,22 @@ from manifest import manifest_parse, manifest_write, manifest_add_dep, Manifest,
 from fs import fs_read_file
 
 
-fn assert_eq(a: String, b: String, label: String) raises:
+def assert_eq(a: String, b: String, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected '" + b + "', got '" + a + "'")
 
 
-fn assert_int_eq(a: Int, b: Int, label: String) raises:
+def assert_int_eq(a: Int, b: Int, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected " + String(b) + ", got " + String(a))
 
 
-fn assert_contains(haystack: String, needle: String, label: String) raises:
+def assert_contains(haystack: String, needle: String, label: String) raises:
     if haystack.find(needle) < 0:
         raise Error("FAIL: " + label + " — expected '" + needle + "' in output")
 
 
-fn test_parse_full() raises:
+def test_parse_full() raises:
     var toml = String("""
 [package]
 name = "requests"
@@ -52,7 +52,7 @@ tcp    = { git = "Mosaad-M/tcp",    version = ">=1.0.0" }
     print("PASS: test_parse_full")
 
 
-fn test_parse_c_deps() raises:
+def test_parse_c_deps() raises:
     var toml = String("""
 [package]
 name = "tcp"
@@ -75,7 +75,7 @@ errno_helper = "errno_helper.c"
     print("PASS: test_parse_c_deps")
 
 
-fn test_manifest_roundtrip() raises:
+def test_manifest_roundtrip() raises:
     var m = Manifest()
     m.name = String("my-pkg")
     m.version = String("0.2.0")
@@ -95,7 +95,7 @@ fn test_manifest_roundtrip() raises:
     print("PASS: test_manifest_roundtrip")
 
 
-fn test_manifest_add_dep() raises:
+def test_manifest_add_dep() raises:
     var m = Manifest()
     m.name = String("test")
     m.version = String("0.1.0")
@@ -115,7 +115,7 @@ fn test_manifest_add_dep() raises:
     print("PASS: test_manifest_add_dep")
 
 
-fn test_no_description() raises:
+def test_no_description() raises:
     var toml = String("""
 [package]
 name = "minimal"
@@ -130,7 +130,7 @@ requires = ">=0.26.1"
     print("PASS: test_no_description")
 
 
-fn test_no_license() raises:
+def test_no_license() raises:
     var toml = String("""
 [package]
 name = "minimal"
@@ -145,7 +145,7 @@ requires = ">=0.26.1"
     print("PASS: test_no_license")
 
 
-fn test_multiple_platforms() raises:
+def test_multiple_platforms() raises:
     var toml = String("""
 [package]
 name = "mypkg"
@@ -171,7 +171,7 @@ requires = ">=0.26.1"
     print("PASS: test_multiple_platforms")
 
 
-fn test_empty_deps() raises:
+def test_empty_deps() raises:
     var toml = String("""
 [package]
 name = "nodeps"
@@ -186,7 +186,7 @@ requires = ">=0.26.1"
     print("PASS: test_empty_deps")
 
 
-fn test_no_c_deps_section() raises:
+def test_no_c_deps_section() raises:
     var toml = String("""
 [package]
 name = "nocdeps"
@@ -201,7 +201,7 @@ requires = ">=0.26.1"
     print("PASS: test_no_c_deps_section")
 
 
-fn test_escape_double_quote_written() raises:
+def test_escape_double_quote_written() raises:
     # Verify that _toml_escape writes \" in the output file for " in values.
     # Note: the simple TOML subset parser does not unescape on read,
     # so we verify the raw file content rather than doing a roundtrip.
@@ -217,7 +217,7 @@ fn test_escape_double_quote_written() raises:
     print("PASS: test_escape_double_quote_written")
 
 
-fn test_escape_backslash_written() raises:
+def test_escape_backslash_written() raises:
     # Verify that _toml_escape writes \\ in the output file for \ in values.
     var m = Manifest()
     m.name = String("pkg")
@@ -231,7 +231,7 @@ fn test_escape_backslash_written() raises:
     print("PASS: test_escape_backslash_written")
 
 
-fn test_c_dep_plain_string() raises:
+def test_c_dep_plain_string() raises:
     var toml = String("""
 [package]
 name = "tcp"
@@ -251,7 +251,7 @@ errno_helper = "errno_helper.c"
     print("PASS: test_c_dep_plain_string")
 
 
-fn test_c_dep_inline_table() raises:
+def test_c_dep_inline_table() raises:
     var toml = String("""
 [package]
 name = "tcp"
@@ -271,7 +271,7 @@ errno_helper = { source = "errno_helper.c" }
     print("PASS: test_c_dep_inline_table")
 
 
-fn test_write_c_deps() raises:
+def test_write_c_deps() raises:
     var m = Manifest()
     m.name = String("tcp")
     m.version = String("1.0.0")
@@ -286,7 +286,7 @@ fn test_write_c_deps() raises:
     print("PASS: test_write_c_deps")
 
 
-fn test_add_dep_preserves_others() raises:
+def test_add_dep_preserves_others() raises:
     var m = Manifest()
     m.name = String("test")
     m.version = String("0.1.0")
@@ -306,7 +306,7 @@ fn test_add_dep_preserves_others() raises:
     print("PASS: test_add_dep_preserves_others")
 
 
-fn main() raises:
+def main() raises:
     print("=== Manifest Tests ===")
     test_parse_full()
     test_parse_c_deps()

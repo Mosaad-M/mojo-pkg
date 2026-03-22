@@ -4,22 +4,22 @@
 from toml import toml_parse, toml_get, toml_get_or, toml_has_section, toml_get_inline, toml_section_keys
 
 
-fn assert_eq(actual: String, expected: String, label: String) raises:
+def assert_eq(actual: String, expected: String, label: String) raises:
     if actual != expected:
         raise Error(label + ": expected '" + expected + "', got '" + actual + "'")
 
 
-fn assert_true(val: Bool, label: String) raises:
+def assert_true(val: Bool, label: String) raises:
     if not val:
         raise Error(label + ": expected True, got False")
 
 
-fn assert_false(val: Bool, label: String) raises:
+def assert_false(val: Bool, label: String) raises:
     if val:
         raise Error(label + ": expected False, got True")
 
 
-fn test_simple_kv() raises:
+def test_simple_kv() raises:
     var src = String("""
 [package]
 name = "hello"
@@ -33,14 +33,14 @@ description = "A test package"
     print("PASS: test_simple_kv")
 
 
-fn test_missing_key() raises:
+def test_missing_key() raises:
     var src = String("[package]\nname = \"x\"\n")
     var doc = toml_parse(src)
     assert_eq(toml_get_or(doc, "package", "missing", "default"), "default", "missing key default")
     print("PASS: test_missing_key")
 
 
-fn test_has_section() raises:
+def test_has_section() raises:
     var src = String("[package]\nname = \"x\"\n\n[dependencies]\ntls = \">=1.0.0\"\n")
     var doc = toml_parse(src)
     assert_true(toml_has_section(doc, "package"), "has [package]")
@@ -49,7 +49,7 @@ fn test_has_section() raises:
     print("PASS: test_has_section")
 
 
-fn test_inline_table() raises:
+def test_inline_table() raises:
     var src = String("""
 [dependencies]
 tls = { git = "Mosaad-M/tls", version = ">=1.0.0" }
@@ -63,7 +63,7 @@ tcp = { git = "Mosaad-M/tcp", version = "^2.0.0" }
     print("PASS: test_inline_table")
 
 
-fn test_section_keys() raises:
+def test_section_keys() raises:
     var src = String("""
 [dependencies]
 tls = { git = "Mosaad-M/tls", version = ">=1.0.0" }
@@ -84,7 +84,7 @@ tcp = { git = "Mosaad-M/tcp", version = ">=1.0.0" }
     print("PASS: test_section_keys")
 
 
-fn test_comment_stripping() raises:
+def test_comment_stripping() raises:
     var src = String("""
 [package]
 name = "test"  # this is a comment
@@ -95,7 +95,7 @@ version = "0.1.0"
     print("PASS: test_comment_stripping")
 
 
-fn test_unquoted_value() raises:
+def test_unquoted_value() raises:
     var src = String("""
 [mojo]
 requires = ">=0.26.1"
@@ -108,7 +108,7 @@ errno_helper = "errno_helper.c"
     print("PASS: test_unquoted_value")
 
 
-fn test_full_mojoproject() raises:
+def test_full_mojoproject() raises:
     var src = String("""
 [package]
 name = "requests"
@@ -134,12 +134,12 @@ json   = { git = "Mosaad-M/json",   version = ">=1.0.0" }
     print("PASS: test_full_mojoproject")
 
 
-fn assert_int_eq(a: Int, b: Int, label: String) raises:
+def assert_int_eq(a: Int, b: Int, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected " + String(b) + ", got " + String(a))
 
 
-fn test_comment_on_own_line() raises:
+def test_comment_on_own_line() raises:
     var src = String("""
 [package]
 # this entire line is a comment
@@ -151,7 +151,7 @@ version = "0.1.0"
     print("PASS: test_comment_on_own_line")
 
 
-fn test_comment_after_value() raises:
+def test_comment_after_value() raises:
     var src = String("""
 [package]
 name = "test" # inline comment
@@ -163,7 +163,7 @@ version = "0.1.0"
     print("PASS: test_comment_after_value")
 
 
-fn test_toml_get_raises_on_missing() raises:
+def test_toml_get_raises_on_missing() raises:
     var src = String("[package]\nname = \"x\"\n")
     var doc = toml_parse(src)
     var raised = False
@@ -176,21 +176,21 @@ fn test_toml_get_raises_on_missing() raises:
     print("PASS: test_toml_get_raises_on_missing")
 
 
-fn test_empty_string_value() raises:
+def test_empty_string_value() raises:
     var src = String("[package]\ndescription = \"\"\n")
     var doc = toml_parse(src)
     assert_eq(toml_get(doc, "package", "description"), "", "empty string value")
     print("PASS: test_empty_string_value")
 
 
-fn test_spaces_around_equals() raises:
+def test_spaces_around_equals() raises:
     var src = String("[package]\nname   =   \"spaced\"\n")
     var doc = toml_parse(src)
     assert_eq(toml_get(doc, "package", "name"), "spaced", "spaces around = ignored")
     print("PASS: test_spaces_around_equals")
 
 
-fn test_inline_table_three_fields() raises:
+def test_inline_table_three_fields() raises:
     var src = String("""
 [dependencies]
 mypkg = { git = "Org/repo", version = ">=1.0.0", channel = "nightly" }
@@ -202,21 +202,21 @@ mypkg = { git = "Org/repo", version = ">=1.0.0", channel = "nightly" }
     print("PASS: test_inline_table_three_fields")
 
 
-fn test_has_section_missing() raises:
+def test_has_section_missing() raises:
     var src = String("[package]\nname = \"x\"\n")
     var doc = toml_parse(src)
     assert_false(toml_has_section(doc, "dependencies"), "missing section returns false")
     print("PASS: test_has_section_missing")
 
 
-fn test_has_section_present() raises:
+def test_has_section_present() raises:
     var src = String("[package]\nname = \"x\"\n\n[mojo]\nrequires = \">=0.26.1\"\n")
     var doc = toml_parse(src)
     assert_true(toml_has_section(doc, "mojo"), "present section returns true")
     print("PASS: test_has_section_present")
 
 
-fn test_section_keys_count() raises:
+def test_section_keys_count() raises:
     var src = String("""
 [package]
 name = "x"
@@ -229,7 +229,7 @@ license = "MIT"
     print("PASS: test_section_keys_count")
 
 
-fn test_section_keys_names() raises:
+def test_section_keys_names() raises:
     var src = String("[mojo]\nrequires = \">=0.26.1\"\n")
     var doc = toml_parse(src)
     var keys = toml_section_keys(doc, "mojo")
@@ -241,7 +241,7 @@ fn test_section_keys_names() raises:
     print("PASS: test_section_keys_names")
 
 
-fn test_two_sections_independent() raises:
+def test_two_sections_independent() raises:
     var src = String("""
 [package]
 name = "pkg"
@@ -256,7 +256,7 @@ requires = ">=0.26.1"
     print("PASS: test_two_sections_independent")
 
 
-fn main() raises:
+def main() raises:
     print("=== TOML Parser Tests ===")
     test_simple_kv()
     test_missing_key()

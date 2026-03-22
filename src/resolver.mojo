@@ -18,39 +18,39 @@ struct SemVer(Copyable, Movable):
     var minor: Int
     var patch: Int
 
-    fn __init__(out self, major: Int, minor: Int, patch: Int):
+    def __init__(out self, major: Int, minor: Int, patch: Int):
         self.major = major
         self.minor = minor
         self.patch = patch
 
-    fn __copyinit__(out self, copy: Self):
+    def __copyinit__(out self, copy: Self):
         self.major = copy.major
         self.minor = copy.minor
         self.patch = copy.patch
 
-    fn __moveinit__(out self, deinit take: Self):
+    def __moveinit__(out self, deinit take: Self):
         self.major = take.major
         self.minor = take.minor
         self.patch = take.patch
 
-    fn __lt__(self, other: Self) -> Bool:
+    def __lt__(self, other: Self) -> Bool:
         if self.major != other.major:
             return self.major < other.major
         if self.minor != other.minor:
             return self.minor < other.minor
         return self.patch < other.patch
 
-    fn __le__(self, other: Self) -> Bool:
+    def __le__(self, other: Self) -> Bool:
         return not (other < self)
 
-    fn __eq__(self, other: Self) -> Bool:
+    def __eq__(self, other: Self) -> Bool:
         return self.major == other.major and self.minor == other.minor and self.patch == other.patch
 
-    fn __str__(self) -> String:
+    def __str__(self) -> String:
         return String(self.major) + "." + String(self.minor) + "." + String(self.patch)
 
 
-fn _parse_int(s: String) -> Int:
+def _parse_int(s: String) -> Int:
     var result = 0
     var bytes = s.as_bytes()
     for i in range(len(bytes)):
@@ -62,7 +62,7 @@ fn _parse_int(s: String) -> Int:
     return result
 
 
-fn semver_parse(version: String) raises -> SemVer:
+def semver_parse(version: String) raises -> SemVer:
     """Parse 'major.minor.patch' or 'vX.Y.Z'. Raises on invalid format."""
     var s = version
     # Strip leading 'v'
@@ -91,7 +91,7 @@ fn semver_parse(version: String) raises -> SemVer:
     return SemVer(major, minor, patch)
 
 
-fn semver_satisfies(version: String, constraint: String) raises -> Bool:
+def semver_satisfies(version: String, constraint: String) raises -> Bool:
     """Check if version satisfies constraint.
     Supported: '>=X.Y.Z', '^X.Y.Z', '=X.Y.Z', '>X.Y.Z', '<X.Y.Z', '<=X.Y.Z'."""
     if len(constraint) == 0:
@@ -151,7 +151,7 @@ fn semver_satisfies(version: String, constraint: String) raises -> Bool:
 
 # ─── Resolver ─────────────────────────────────────────────────────────────────
 
-fn _best_version(meta: PackageMeta, constraint: String) raises -> PackageVersion:
+def _best_version(meta: PackageMeta, constraint: String) raises -> PackageVersion:
     """Find the newest version satisfying the constraint."""
     var found = False
     var best_ver = SemVer(0, 0, 0)
@@ -170,7 +170,7 @@ fn _best_version(meta: PackageMeta, constraint: String) raises -> PackageVersion
     return meta.versions[best_idx].copy()
 
 
-fn resolve(manifest: Manifest, mut client: HttpClient) raises -> LockFile:
+def resolve(manifest: Manifest, mut client: HttpClient) raises -> LockFile:
     """Resolve all dependencies (greedy BFS). Returns a complete LockFile.
 
     Fetches packages/all.json in a single HTTP request to pre-populate a

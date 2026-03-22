@@ -5,17 +5,17 @@ from fs import fs_write_file, fs_read_file
 from manifest import manifest_parse, manifest_write, manifest_remove_dep, Manifest, Dependency
 
 
-fn assert_eq(a: String, b: String, label: String) raises:
+def assert_eq(a: String, b: String, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected '" + b + "', got '" + a + "'")
 
 
-fn assert_int_eq(a: Int, b: Int, label: String) raises:
+def assert_int_eq(a: Int, b: Int, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected " + String(b) + ", got " + String(a))
 
 
-fn make_manifest() -> Manifest:
+def make_manifest() -> Manifest:
     var m = Manifest()
     m.name = String("test-pkg")
     m.version = String("0.1.0")
@@ -27,7 +27,7 @@ fn make_manifest() -> Manifest:
     return m^
 
 
-fn test_remove_middle_dep() raises:
+def test_remove_middle_dep() raises:
     """Remove a dep from the middle of the list; others remain."""
     var m = make_manifest()
     manifest_remove_dep(m, "tcp")
@@ -37,7 +37,7 @@ fn test_remove_middle_dep() raises:
     print("PASS: test_remove_middle_dep")
 
 
-fn test_remove_first_dep() raises:
+def test_remove_first_dep() raises:
     """Remove the first dep; others remain in order."""
     var m = make_manifest()
     manifest_remove_dep(m, "tls")
@@ -47,7 +47,7 @@ fn test_remove_first_dep() raises:
     print("PASS: test_remove_first_dep")
 
 
-fn test_remove_last_dep() raises:
+def test_remove_last_dep() raises:
     """Remove the last dep."""
     var m = make_manifest()
     manifest_remove_dep(m, "json")
@@ -57,7 +57,7 @@ fn test_remove_last_dep() raises:
     print("PASS: test_remove_last_dep")
 
 
-fn test_remove_only_dep() raises:
+def test_remove_only_dep() raises:
     """Remove the only dep; list becomes empty."""
     var m = Manifest()
     m.name = String("test")
@@ -70,7 +70,7 @@ fn test_remove_only_dep() raises:
     print("PASS: test_remove_only_dep")
 
 
-fn test_remove_nonexistent_raises() raises:
+def test_remove_nonexistent_raises() raises:
     """Removing a dep that doesn't exist should raise."""
     var m = make_manifest()
     var raised = False
@@ -82,7 +82,7 @@ fn test_remove_nonexistent_raises() raises:
     print("PASS: test_remove_nonexistent_raises")
 
 
-fn test_remove_from_empty_raises() raises:
+def test_remove_from_empty_raises() raises:
     """Removing from a manifest with no deps should raise."""
     var m = Manifest()
     m.name = String("empty")
@@ -98,7 +98,7 @@ fn test_remove_from_empty_raises() raises:
     print("PASS: test_remove_from_empty_raises")
 
 
-fn test_remove_roundtrip() raises:
+def test_remove_roundtrip() raises:
     """Remove a dep, write to file, parse back, verify dep is gone."""
     var m = make_manifest()
     manifest_remove_dep(m, "tcp")
@@ -116,7 +116,7 @@ fn test_remove_roundtrip() raises:
     print("PASS: test_remove_roundtrip")
 
 
-fn test_remove_preserves_dep_fields() raises:
+def test_remove_preserves_dep_fields() raises:
     """Remaining deps keep their git and version fields intact."""
     var m = make_manifest()
     manifest_remove_dep(m, "tcp")
@@ -127,7 +127,7 @@ fn test_remove_preserves_dep_fields() raises:
     print("PASS: test_remove_preserves_dep_fields")
 
 
-fn main() raises:
+def main() raises:
     print("=== Remove Dep Tests ===")
     test_remove_middle_dep()
     test_remove_first_dep()

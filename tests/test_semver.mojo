@@ -5,29 +5,29 @@
 from resolver import semver_parse, semver_satisfies, SemVer
 
 
-fn assert_true(val: Bool, label: String) raises:
+def assert_true(val: Bool, label: String) raises:
     if not val:
         raise Error("FAIL: " + label + " — expected True, got False")
 
 
-fn assert_false(val: Bool, label: String) raises:
+def assert_false(val: Bool, label: String) raises:
     if val:
         raise Error("FAIL: " + label + " — expected False, got True")
 
 
-fn assert_eq_str(a: String, b: String, label: String) raises:
+def assert_eq_str(a: String, b: String, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected '" + b + "', got '" + a + "'")
 
 
-fn assert_int_eq(a: Int, b: Int, label: String) raises:
+def assert_int_eq(a: Int, b: Int, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected " + String(b) + ", got " + String(a))
 
 
 # ─── semver_parse ──────────────────────────────────────────────────────────────
 
-fn test_parse_basic() raises:
+def test_parse_basic() raises:
     var v = semver_parse("1.2.3")
     assert_int_eq(v.major, 1, "parse 1.2.3 major")
     assert_int_eq(v.minor, 2, "parse 1.2.3 minor")
@@ -35,7 +35,7 @@ fn test_parse_basic() raises:
     print("PASS: test_parse_basic")
 
 
-fn test_parse_v_prefix() raises:
+def test_parse_v_prefix() raises:
     var v = semver_parse("v2.3.4")
     assert_int_eq(v.major, 2, "parse v2.3.4 major")
     assert_int_eq(v.minor, 3, "parse v2.3.4 minor")
@@ -43,13 +43,13 @@ fn test_parse_v_prefix() raises:
     print("PASS: test_parse_v_prefix")
 
 
-fn test_parse_V_prefix() raises:
+def test_parse_V_prefix() raises:
     var v = semver_parse("V1.0.0")
     assert_int_eq(v.major, 1, "parse V1.0.0 major")
     print("PASS: test_parse_V_prefix")
 
 
-fn test_parse_zeros() raises:
+def test_parse_zeros() raises:
     var v = semver_parse("0.0.0")
     assert_int_eq(v.major, 0, "parse 0.0.0 major")
     assert_int_eq(v.minor, 0, "parse 0.0.0 minor")
@@ -57,7 +57,7 @@ fn test_parse_zeros() raises:
     print("PASS: test_parse_zeros")
 
 
-fn test_parse_large() raises:
+def test_parse_large() raises:
     var v = semver_parse("10.20.30")
     assert_int_eq(v.major, 10, "parse 10.20.30 major")
     assert_int_eq(v.minor, 20, "parse 10.20.30 minor")
@@ -65,7 +65,7 @@ fn test_parse_large() raises:
     print("PASS: test_parse_large")
 
 
-fn test_parse_two_part() raises:
+def test_parse_two_part() raises:
     var v = semver_parse("1.0")
     assert_int_eq(v.major, 1, "parse 1.0 major")
     assert_int_eq(v.minor, 0, "parse 1.0 minor")
@@ -75,7 +75,7 @@ fn test_parse_two_part() raises:
 
 # ─── SemVer.__str__ ────────────────────────────────────────────────────────────
 
-fn test_semver_str() raises:
+def test_semver_str() raises:
     var v = SemVer(1, 2, 3)
     assert_eq_str(v.__str__(), "1.2.3", "__str__ 1.2.3")
     var v2 = SemVer(0, 0, 0)
@@ -85,7 +85,7 @@ fn test_semver_str() raises:
 
 # ─── SemVer comparisons ────────────────────────────────────────────────────────
 
-fn test_semver_ordering() raises:
+def test_semver_ordering() raises:
     var a = SemVer(1, 0, 0)
     var b = SemVer(1, 0, 1)
     var c = SemVer(2, 0, 0)
@@ -97,7 +97,7 @@ fn test_semver_ordering() raises:
     print("PASS: test_semver_ordering")
 
 
-fn test_semver_equality() raises:
+def test_semver_equality() raises:
     var a = SemVer(1, 0, 0)
     var b = SemVer(1, 0, 0)
     var c = SemVer(1, 0, 1)
@@ -106,7 +106,7 @@ fn test_semver_equality() raises:
     print("PASS: test_semver_equality")
 
 
-fn test_semver_le() raises:
+def test_semver_le() raises:
     var a = SemVer(1, 0, 0)
     var b = SemVer(1, 0, 1)
     assert_true(a <= a, "1.0.0 <= 1.0.0")
@@ -117,7 +117,7 @@ fn test_semver_le() raises:
 
 # ─── >= constraint ─────────────────────────────────────────────────────────────
 
-fn test_gte_constraint() raises:
+def test_gte_constraint() raises:
     assert_true(semver_satisfies("1.0.0", ">=1.0.0"), ">=1.0.0 exact")
     assert_true(semver_satisfies("1.2.3", ">=1.0.0"), ">=1.0.0 higher")
     assert_true(semver_satisfies("2.0.0", ">=1.0.0"), ">=1.0.0 major higher")
@@ -127,7 +127,7 @@ fn test_gte_constraint() raises:
 
 # ─── > constraint ─────────────────────────────────────────────────────────────
 
-fn test_gt_constraint() raises:
+def test_gt_constraint() raises:
     assert_true(semver_satisfies("2.0.0", ">1.0.0"), ">1.0.0 higher")
     assert_false(semver_satisfies("1.0.0", ">1.0.0"), ">1.0.0 equal not satisfied")
     assert_false(semver_satisfies("0.9.0", ">1.0.0"), ">1.0.0 lower")
@@ -136,7 +136,7 @@ fn test_gt_constraint() raises:
 
 # ─── < constraint ─────────────────────────────────────────────────────────────
 
-fn test_lt_constraint() raises:
+def test_lt_constraint() raises:
     assert_true(semver_satisfies("0.9.0", "<1.0.0"), "<1.0.0 lower")
     assert_false(semver_satisfies("1.0.0", "<1.0.0"), "<1.0.0 equal not satisfied")
     assert_false(semver_satisfies("1.1.0", "<1.0.0"), "<1.0.0 higher")
@@ -145,7 +145,7 @@ fn test_lt_constraint() raises:
 
 # ─── <= constraint ────────────────────────────────────────────────────────────
 
-fn test_lte_constraint() raises:
+def test_lte_constraint() raises:
     assert_true(semver_satisfies("1.0.0", "<=1.0.0"), "<=1.0.0 exact")
     assert_true(semver_satisfies("0.9.0", "<=1.0.0"), "<=1.0.0 below")
     assert_false(semver_satisfies("1.0.1", "<=1.0.0"), "<=1.0.0 above")
@@ -154,7 +154,7 @@ fn test_lte_constraint() raises:
 
 # ─── = exact constraint ───────────────────────────────────────────────────────
 
-fn test_eq_constraint() raises:
+def test_eq_constraint() raises:
     assert_true(semver_satisfies("1.2.3", "=1.2.3"), "=1.2.3 exact")
     assert_false(semver_satisfies("1.2.4", "=1.2.3"), "=1.2.3 higher patch")
     assert_false(semver_satisfies("1.2.2", "=1.2.3"), "=1.2.3 lower patch")
@@ -163,7 +163,7 @@ fn test_eq_constraint() raises:
 
 # ─── ^ caret constraint ───────────────────────────────────────────────────────
 
-fn test_caret_constraint() raises:
+def test_caret_constraint() raises:
     assert_true(semver_satisfies("1.0.0", "^1.0.0"), "^1.0.0 exact")
     assert_true(semver_satisfies("1.2.0", "^1.0.0"), "^1.0.0 minor higher")
     assert_true(semver_satisfies("1.0.5", "^1.0.0"), "^1.0.0 patch higher")
@@ -175,14 +175,14 @@ fn test_caret_constraint() raises:
 
 # ─── empty constraint ─────────────────────────────────────────────────────────
 
-fn test_empty_constraint() raises:
+def test_empty_constraint() raises:
     assert_true(semver_satisfies("1.0.0", ""), "empty constraint: always true")
     assert_true(semver_satisfies("99.99.99", ""), "empty constraint: any version")
     assert_true(semver_satisfies("0.0.0", ""), "empty constraint: zero version")
     print("PASS: test_empty_constraint")
 
 
-fn main() raises:
+def main() raises:
     print("=== SemVer Tests ===")
     test_parse_basic()
     test_parse_v_prefix()

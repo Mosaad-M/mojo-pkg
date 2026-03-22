@@ -19,7 +19,7 @@ from registry import registry_fetch_package, registry_search, PackageMeta
 from fs import fs_exists, fs_mkdir_p, fs_home_dir, fs_rm_rf
 
 
-fn print_usage():
+def print_usage():
     print("mojo-pkg — Mojo Package Manager")
     print("")
     print("Usage:")
@@ -33,7 +33,7 @@ fn print_usage():
     print("  mojo-pkg version          Print version")
 
 
-fn cmd_install() raises:
+def cmd_install() raises:
     """Resolve and install all dependencies from mojoproject.toml."""
     if not fs_exists("mojoproject.toml"):
         raise Error("No mojoproject.toml found in current directory")
@@ -65,7 +65,7 @@ fn cmd_install() raises:
     print("Done! Use $(cat .mojo_flags) in your mojo build command.")
 
 
-fn cmd_update() raises:
+def cmd_update() raises:
     """Re-resolve all deps to latest satisfying versions, update mojo.lock."""
     if not fs_exists("mojoproject.toml"):
         raise Error("No mojoproject.toml found in current directory")
@@ -106,7 +106,7 @@ fn cmd_update() raises:
     print(String(n_changed) + " package(s) changed.")
 
 
-fn cmd_remove(pkg_name: String) raises:
+def cmd_remove(pkg_name: String) raises:
     """Remove a package from mojoproject.toml, re-resolve, and delete its files."""
     if len(pkg_name) == 0:
         raise Error("Usage: mojo-pkg remove <package-name>")
@@ -147,7 +147,7 @@ fn cmd_remove(pkg_name: String) raises:
     print("Removed " + pkg_name)
 
 
-fn cmd_add(pkg_name: String) raises:
+def cmd_add(pkg_name: String) raises:
     """Add a package: fetch latest version, update mojoproject.toml and mojo.lock."""
     if len(pkg_name) == 0:
         raise Error("Usage: mojo-pkg add <package-name>")
@@ -195,7 +195,7 @@ fn cmd_add(pkg_name: String) raises:
     print("Added " + pkg_name + " " + latest.version)
 
 
-fn cmd_flags() raises:
+def cmd_flags() raises:
     """Print compiler flags from mojo.lock."""
     if not fs_exists("mojo.lock"):
         raise Error("No mojo.lock found. Run 'mojo-pkg install' first.")
@@ -203,7 +203,7 @@ fn cmd_flags() raises:
     print_flags(lock)
 
 
-fn cmd_search(query: String) raises:
+def cmd_search(query: String) raises:
     """Search the registry."""
     var client = HttpClient()
     var results = registry_search(query, client)
@@ -215,7 +215,7 @@ fn cmd_search(query: String) raises:
         print("  " + results[i])
 
 
-fn cmd_list() raises:
+def cmd_list() raises:
     """List locked packages."""
     if not fs_exists("mojo.lock"):
         print("No mojo.lock found.")
@@ -229,7 +229,7 @@ fn cmd_list() raises:
         print("  " + lock.packages[i].name + " " + lock.packages[i].version + "  (" + lock.packages[i].install_path + ")")
 
 
-fn main() raises:
+def main() raises:
     var args = argv()
     if len(args) < 2:
         print_usage()

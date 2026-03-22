@@ -12,7 +12,7 @@ from os import getenv
 
 # ─── Platform detection ────────────────────────────────────────────────────────
 
-fn fs_exists(path: String) -> Bool:
+def fs_exists(path: String) -> Bool:
     """Return True if path exists (via access syscall)."""
     var pb = path.as_bytes()
     var n = len(pb)
@@ -25,33 +25,33 @@ fn fs_exists(path: String) -> Bool:
     return ret == 0
 
 
-fn platform_name() -> String:
+def platform_name() -> String:
     """Return 'linux' or 'macos' based on /proc/version existence."""
     if fs_exists("/proc/version"):
         return String("linux")
     return String("macos")
 
 
-fn shared_lib_ext() -> String:
+def shared_lib_ext() -> String:
     if platform_name() == "linux":
         return String(".so")
     return String(".dylib")
 
 
-fn gcc_shared_flag() -> String:
+def gcc_shared_flag() -> String:
     if platform_name() == "linux":
         return String("-shared")
     return String("-dynamiclib")
 
 
-fn c_compiler() -> String:
+def c_compiler() -> String:
     """gcc on Linux, clang on macOS."""
     if platform_name() == "linux":
         return String("gcc")
     return String("clang")
 
 
-fn ca_bundle_path() raises -> String:
+def ca_bundle_path() raises -> String:
     """Return path to system CA bundle."""
     var candidates = List[String]()
     candidates.append("/etc/ssl/certs/ca-certificates.crt")   # Debian/Ubuntu
@@ -66,14 +66,14 @@ fn ca_bundle_path() raises -> String:
 
 # ─── Home directory ────────────────────────────────────────────────────────────
 
-fn fs_home_dir() -> String:
+def fs_home_dir() -> String:
     """Return $HOME environment variable."""
     return getenv("HOME", "/tmp")
 
 
 # ─── Shell quoting ────────────────────────────────────────────────────────────
 
-fn _shell_quote(s: String) -> String:
+def _shell_quote(s: String) -> String:
     """Wrap s in single quotes, escaping any embedded single quotes (x -> '\\''x).
     Makes shell commands safe even when paths contain spaces or metacharacters."""
     var bytes = s.as_bytes()
@@ -94,7 +94,7 @@ fn _shell_quote(s: String) -> String:
 
 # ─── mkdir -p ─────────────────────────────────────────────────────────────────
 
-fn fs_mkdir_p(path: String) raises:
+def fs_mkdir_p(path: String) raises:
     """Create directory and all parents. Like mkdir -p."""
     var cmd = "mkdir -p " + _shell_quote(path)
     var ret = fs_run(cmd)
@@ -104,7 +104,7 @@ fn fs_mkdir_p(path: String) raises:
 
 # ─── File I/O ─────────────────────────────────────────────────────────────────
 
-fn fs_read_file(path: String) raises -> String:
+def fs_read_file(path: String) raises -> String:
     """Read entire file and return as String."""
     var pb = path.as_bytes()
     var pn = len(pb)
@@ -139,7 +139,7 @@ fn fs_read_file(path: String) raises -> String:
     return String(unsafe_from_utf8=out^)
 
 
-fn fs_write_file(path: String, content: String) raises:
+def fs_write_file(path: String, content: String) raises:
     """Write string to file, creating or truncating it."""
     var pb = path.as_bytes()
     var pn = len(pb)
@@ -163,7 +163,7 @@ fn fs_write_file(path: String, content: String) raises:
     _ = external_call["close", Int32](fd)
 
 
-fn fs_write_bytes(path: String, data: List[UInt8]) raises:
+def fs_write_bytes(path: String, data: List[UInt8]) raises:
     """Write raw bytes to file."""
     var pb = path.as_bytes()
     var pn = len(pb)
@@ -188,7 +188,7 @@ fn fs_write_bytes(path: String, data: List[UInt8]) raises:
 
 # ─── system() ─────────────────────────────────────────────────────────────────
 
-fn fs_run(cmd: String) raises -> Int32:
+def fs_run(cmd: String) raises -> Int32:
     """Run a shell command via system(). Returns exit code."""
     var cb = cmd.as_bytes()
     var n = len(cb)
@@ -201,14 +201,14 @@ fn fs_run(cmd: String) raises -> Int32:
     return ret
 
 
-fn fs_run_check(cmd: String) raises:
+def fs_run_check(cmd: String) raises:
     """Run a shell command, raising on non-zero exit."""
     var ret = fs_run(cmd)
     if ret != 0:
         raise Error("Command failed (exit " + String(ret) + "): " + cmd)
 
 
-fn fs_rm_rf(path: String) raises:
+def fs_rm_rf(path: String) raises:
     """Remove a directory tree. Like rm -rf."""
     var ret = fs_run("rm -rf " + _shell_quote(path))
     if ret != 0:

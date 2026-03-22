@@ -6,21 +6,21 @@ from installer import sha256_hex, sha256_hex_bytes, _bytes_to_hex
 from validate import validate_name, validate_version, validate_tarball_url
 
 
-fn assert_eq(a: String, b: String, label: String) raises:
+def assert_eq(a: String, b: String, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected '" + b + "', got '" + a + "'")
 
 
-fn assert_int_eq(a: Int, b: Int, label: String) raises:
+def assert_int_eq(a: Int, b: Int, label: String) raises:
     if a != b:
         raise Error("FAIL: " + label + " — expected " + String(b) + ", got " + String(a))
 
 
-fn assert_raises[T: AnyType](val: T, label: String) raises:
+def assert_raises[T: AnyType](val: T, label: String) raises:
     raise Error("FAIL: " + label + " — expected Error to be raised")
 
 
-fn test_bytes_to_hex() raises:
+def test_bytes_to_hex() raises:
     # All zeros -> all "00"
     var zeros = List[UInt8]()
     zeros.append(0)
@@ -43,7 +43,7 @@ fn test_bytes_to_hex() raises:
     print("PASS: test_bytes_to_hex")
 
 
-fn test_sha256_hex_empty() raises:
+def test_sha256_hex_empty() raises:
     # SHA-256("") = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
     var h = sha256_hex("")
     assert_int_eq(len(h), 64, "sha256 of empty: length 64")
@@ -52,7 +52,7 @@ fn test_sha256_hex_empty() raises:
     print("PASS: test_sha256_hex_empty")
 
 
-fn test_sha256_hex_abc() raises:
+def test_sha256_hex_abc() raises:
     # SHA-256("abc") as produced by this project's crypto.hash implementation
     # (value verified against tls_pure hash tests which use this same SHA-256 impl)
     var h = sha256_hex("abc")
@@ -62,7 +62,7 @@ fn test_sha256_hex_abc() raises:
     print("PASS: test_sha256_hex_abc")
 
 
-fn test_sha256_hex_bytes_matches_hex() raises:
+def test_sha256_hex_bytes_matches_hex() raises:
     # sha256_hex_bytes should produce the same result as sha256_hex for the same data
     var s = String("hello world")
     var sb = s.as_bytes()
@@ -75,7 +75,7 @@ fn test_sha256_hex_bytes_matches_hex() raises:
     print("PASS: test_sha256_hex_bytes_matches_hex")
 
 
-fn test_validate_name_raises_before_install() raises:
+def test_validate_name_raises_before_install() raises:
     # Verify that invalid names are rejected (as they would be inside install_package)
     var raised = False
     try:
@@ -87,7 +87,7 @@ fn test_validate_name_raises_before_install() raises:
     print("PASS: test_validate_name_raises_before_install")
 
 
-fn test_validate_version_raises_before_install() raises:
+def test_validate_version_raises_before_install() raises:
     var raised = False
     try:
         validate_version("not_a_version")
@@ -98,7 +98,7 @@ fn test_validate_version_raises_before_install() raises:
     print("PASS: test_validate_version_raises_before_install")
 
 
-fn test_validate_url_raises_before_install() raises:
+def test_validate_url_raises_before_install() raises:
     # A URL with shell metacharacters must be rejected before any paths are constructed
     var raised = False
     try:
@@ -110,7 +110,7 @@ fn test_validate_url_raises_before_install() raises:
     print("PASS: test_validate_url_raises_before_install")
 
 
-fn main() raises:
+def main() raises:
     print("=== Installer Tests ===")
     test_bytes_to_hex()
     test_sha256_hex_empty()

@@ -13,17 +13,17 @@ struct Dependency(Copyable, Movable):
     var git: String      # e.g. "Mosaad-M/tls"
     var version: String  # e.g. ">=1.0.0"
 
-    fn __init__(out self, name: String, git: String, version: String):
+    def __init__(out self, name: String, git: String, version: String):
         self.name = name
         self.git = git
         self.version = version
 
-    fn __copyinit__(out self, copy: Self):
+    def __copyinit__(out self, copy: Self):
         self.name = copy.name
         self.git = copy.git
         self.version = copy.version
 
-    fn __moveinit__(out self, deinit take: Self):
+    def __moveinit__(out self, deinit take: Self):
         self.name = take.name^
         self.git = take.git^
         self.version = take.version^
@@ -34,15 +34,15 @@ struct CDependency(Copyable, Movable):
     var name: String    # e.g. "errno_helper"
     var source: String  # e.g. "errno_helper.c"
 
-    fn __init__(out self, name: String, source: String):
+    def __init__(out self, name: String, source: String):
         self.name = name
         self.source = source
 
-    fn __copyinit__(out self, copy: Self):
+    def __copyinit__(out self, copy: Self):
         self.name = copy.name
         self.source = copy.source
 
-    fn __moveinit__(out self, deinit take: Self):
+    def __moveinit__(out self, deinit take: Self):
         self.name = take.name^
         self.source = take.source^
 
@@ -58,7 +58,7 @@ struct Manifest(Movable):
     var deps: List[Dependency]
     var c_deps: List[CDependency]
 
-    fn __init__(out self):
+    def __init__(out self):
         self.name = String("")
         self.version = String("")
         self.description = String("")
@@ -68,7 +68,7 @@ struct Manifest(Movable):
         self.deps = List[Dependency]()
         self.c_deps = List[CDependency]()
 
-    fn __moveinit__(out self, deinit take: Self):
+    def __moveinit__(out self, deinit take: Self):
         self.name = take.name^
         self.version = take.version^
         self.description = take.description^
@@ -79,7 +79,7 @@ struct Manifest(Movable):
         self.c_deps = take.c_deps^
 
 
-fn manifest_parse_str(src: String) raises -> Manifest:
+def manifest_parse_str(src: String) raises -> Manifest:
     """Parse a mojoproject.toml from a string."""
     var doc = toml_parse(src)
     var m = Manifest()
@@ -173,13 +173,13 @@ fn manifest_parse_str(src: String) raises -> Manifest:
     return m^
 
 
-fn manifest_parse(path: String) raises -> Manifest:
+def manifest_parse(path: String) raises -> Manifest:
     """Parse a mojoproject.toml file at the given path."""
     var src = fs_read_file(path)
     return manifest_parse_str(src)
 
 
-fn _toml_escape(s: String) -> String:
+def _toml_escape(s: String) -> String:
     """Escape a string for use inside a TOML double-quoted string value.
     Replaces: backslash -> \\, double-quote -> \\", newline -> \\n."""
     var bytes = s.as_bytes()
@@ -201,7 +201,7 @@ fn _toml_escape(s: String) -> String:
     return String(unsafe_from_utf8=out^)
 
 
-fn manifest_write(m: Manifest, path: String) raises:
+def manifest_write(m: Manifest, path: String) raises:
     """Write a Manifest to a mojoproject.toml file."""
     var content = String("[package]\n")
     content += "name = \"" + _toml_escape(m.name) + "\"\n"
@@ -235,7 +235,7 @@ fn manifest_write(m: Manifest, path: String) raises:
     fs_write_file(path, content)
 
 
-fn manifest_add_dep(mut m: Manifest, name: String, git: String, version: String) raises:
+def manifest_add_dep(mut m: Manifest, name: String, git: String, version: String) raises:
     """Add or update a dependency in the manifest."""
     validate_name(name)
     for i in range(len(m.deps)):
@@ -246,7 +246,7 @@ fn manifest_add_dep(mut m: Manifest, name: String, git: String, version: String)
     m.deps.append(Dependency(name, git, version))
 
 
-fn manifest_remove_dep(mut m: Manifest, name: String) raises:
+def manifest_remove_dep(mut m: Manifest, name: String) raises:
     """Remove a direct dependency by name. Raises if not found."""
     validate_name(name)
     var new_deps = List[Dependency]()

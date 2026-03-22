@@ -24,7 +24,7 @@ struct Url(Copyable, Movable):
     var query: String
     var raw: String
 
-    fn __init__(out self):
+    def __init__(out self):
         self.scheme = String("")
         self.host = String("")
         self.port = 80
@@ -32,7 +32,7 @@ struct Url(Copyable, Movable):
         self.query = String("")
         self.raw = String("")
 
-    fn __copyinit__(out self, copy: Self):
+    def __copyinit__(out self, copy: Self):
         self.scheme = copy.scheme
         self.host = copy.host
         self.port = copy.port
@@ -40,7 +40,7 @@ struct Url(Copyable, Movable):
         self.query = copy.query
         self.raw = copy.raw
 
-    fn __moveinit__(out self, deinit take: Self):
+    def __moveinit__(out self, deinit take: Self):
         self.scheme = take.scheme^
         self.host = take.host^
         self.port = take.port
@@ -48,7 +48,7 @@ struct Url(Copyable, Movable):
         self.query = take.query^
         self.raw = take.raw^
 
-    fn request_path(self) -> String:
+    def request_path(self) -> String:
         """Return the path + query string for the HTTP request line.
 
         Examples:
@@ -60,7 +60,7 @@ struct Url(Copyable, Movable):
             return self.path + "?" + self.query
         return self.path
 
-    fn host_header(self) -> String:
+    def host_header(self) -> String:
         """Return the Host header value.
 
         Includes port only if it's non-standard (not 80 for http, not 443 for https).
@@ -74,7 +74,7 @@ struct Url(Copyable, Movable):
         return self.host
 
 
-fn _ptr_to_string(
+def _ptr_to_string(
     data_ptr: UnsafePointer[UInt8, _], start: Int, end: Int
 ) -> String:
     """Materialize a String from a pointer byte range [start, end)."""
@@ -86,7 +86,7 @@ fn _ptr_to_string(
     return String(unsafe_from_utf8=result^)
 
 
-fn _find_scheme_sep(data_ptr: UnsafePointer[UInt8, _], data_len: Int) -> Int:
+def _find_scheme_sep(data_ptr: UnsafePointer[UInt8, _], data_len: Int) -> Int:
     """Find '://' in the URL. Returns position of ':' or -1."""
     if data_len < 3:
         return -1
@@ -100,7 +100,7 @@ fn _find_scheme_sep(data_ptr: UnsafePointer[UInt8, _], data_len: Int) -> Int:
     return -1
 
 
-fn _find_char(
+def _find_char(
     data_ptr: UnsafePointer[UInt8, _], data_len: Int, c: UInt8, start: Int = 0
 ) -> Int:
     """Find first occurrence of byte c in pointer data starting at start."""
@@ -110,7 +110,7 @@ fn _find_char(
     return -1
 
 
-fn _parse_port(
+def _parse_port(
     data_ptr: UnsafePointer[UInt8, _], start: Int, end: Int
 ) raises -> Int:
     """Parse a port number from pointer range [start, end).
@@ -134,7 +134,7 @@ fn _parse_port(
     return result
 
 
-fn _validate_host(host: String) raises:
+def _validate_host(host: String) raises:
     """Validate hostname contains no dangerous characters.
 
     Rejects null bytes, CR, LF, spaces, and slash which could enable
@@ -148,7 +148,7 @@ fn _validate_host(host: String) raises:
             raise Error("invalid hostname: contains dangerous character")
 
 
-fn parse_url(raw_url: String) raises -> Url:
+def parse_url(raw_url: String) raises -> Url:
     """Parse a URL string into its components.
 
     Uses UnsafePointer for zero-copy parsing — converts the URL to a

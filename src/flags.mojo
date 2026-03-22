@@ -6,7 +6,7 @@ from manifest import CDependency, manifest_parse
 from fs import fs_write_file, fs_read_file, fs_exists, fs_home_dir, shared_lib_ext
 
 
-fn get_include_flags(lock: LockFile) -> String:
+def get_include_flags(lock: LockFile) -> String:
     """Returns space-separated -I flags for all installed packages.
     Paths use no quoting: install_path is validated to alphanumeric+dash chars only."""
     var flags = String("")
@@ -15,7 +15,7 @@ fn get_include_flags(lock: LockFile) -> String:
     return flags
 
 
-fn get_linker_flags(lock: LockFile) -> String:
+def get_linker_flags(lock: LockFile) -> String:
     """Returns -Xlinker flags for packages with C deps.
     Paths use no quoting: install_path and c_dep.name are validated safe chars."""
     var flags = String("")
@@ -35,7 +35,7 @@ fn get_linker_flags(lock: LockFile) -> String:
     return flags
 
 
-fn write_flags_file(lock: LockFile, path: String) raises:
+def write_flags_file(lock: LockFile, path: String) raises:
     """Write .mojo_flags file with all -I and -Xlinker flags."""
     var inc = get_include_flags(lock)
     var lnk = get_linker_flags(lock)
@@ -55,7 +55,7 @@ fn write_flags_file(lock: LockFile, path: String) raises:
     fs_write_file(path, content + "\n")
 
 
-fn write_flags_cache(packages: List[LockedPackage]) raises:
+def write_flags_cache(packages: List[LockedPackage]) raises:
     """Write computed flags to ~/.mojo/packages/.flags_cache.
     Called by installer after a successful install so that repeated
     'mojo-pkg flags' invocations skip re-parsing all manifests."""
@@ -73,7 +73,7 @@ fn write_flags_cache(packages: List[LockedPackage]) raises:
     fs_write_file(cache_path, content)
 
 
-fn print_flags(lock: LockFile) raises:
+def print_flags(lock: LockFile) raises:
     """Print flags to stdout (for use in build scripts via command substitution).
     Reads ~/.mojo/packages/.flags_cache if it exists (written by installer);
     otherwise computes from lock and prints."""

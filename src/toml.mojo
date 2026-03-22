@@ -11,14 +11,14 @@ struct TomlDoc(Movable):
     """Parsed TOML document as a two-level dict: sections["section"]["key"] = "value"."""
     var sections: Dict[String, Dict[String, String]]
 
-    fn __init__(out self):
+    def __init__(out self):
         self.sections = Dict[String, Dict[String, String]]()
 
-    fn __moveinit__(out self, deinit take: Self):
+    def __moveinit__(out self, deinit take: Self):
         self.sections = take.sections^
 
 
-fn _trim(s: String) -> String:
+def _trim(s: String) -> String:
     """Strip leading and trailing whitespace."""
     var bytes = s.as_bytes()
     var start = 0
@@ -35,7 +35,7 @@ fn _trim(s: String) -> String:
     return String(unsafe_from_utf8=out^)
 
 
-fn _strip_comment(s: String) -> String:
+def _strip_comment(s: String) -> String:
     """Remove trailing # comment (respects quoted strings)."""
     var bytes = s.as_bytes()
     var in_quote = False
@@ -52,7 +52,7 @@ fn _strip_comment(s: String) -> String:
     return s
 
 
-fn _unquote(s: String) raises -> String:
+def _unquote(s: String) raises -> String:
     """Strip surrounding double-quotes and unescape TOML basic string escape sequences.
     Handles: \\" -> ", \\\\ -> \\, \\n -> newline, \\r -> CR, \\t -> tab.
     \\uXXXX sequences are passed through literally (not decoded)."""
@@ -97,7 +97,7 @@ fn _unquote(s: String) raises -> String:
     return s
 
 
-fn _find_char(s: String, ch: UInt8, start: Int) -> Int:
+def _find_char(s: String, ch: UInt8, start: Int) -> Int:
     """Find first occurrence of ch in s starting at start. Returns -1 if not found."""
     var bytes = s.as_bytes()
     for i in range(start, len(bytes)):
@@ -106,7 +106,7 @@ fn _find_char(s: String, ch: UInt8, start: Int) -> Int:
     return -1
 
 
-fn _substr(s: String, start: Int, end: Int) -> String:
+def _substr(s: String, start: Int, end: Int) -> String:
     """Return s[start:end]."""
     var bytes = s.as_bytes()
     var n = len(bytes)
@@ -120,7 +120,7 @@ fn _substr(s: String, start: Int, end: Int) -> String:
     return String(unsafe_from_utf8=out^)
 
 
-fn _parse_inline_table(s: String) raises -> Dict[String, String]:
+def _parse_inline_table(s: String) raises -> Dict[String, String]:
     """Parse inline table: { key = "value", key2 = "value2" }"""
     var result = Dict[String, String]()
     var bytes = s.as_bytes()
@@ -177,7 +177,7 @@ fn _parse_inline_table(s: String) raises -> Dict[String, String]:
     return result^
 
 
-fn toml_parse(src: String) raises -> TomlDoc:
+def toml_parse(src: String) raises -> TomlDoc:
     """Parse a TOML document. Returns a TomlDoc with all sections."""
     var doc = TomlDoc()
     var current_section = String("")
@@ -221,7 +221,7 @@ fn toml_parse(src: String) raises -> TomlDoc:
     return doc^
 
 
-fn toml_get(doc: TomlDoc, section: String, key: String) raises -> String:
+def toml_get(doc: TomlDoc, section: String, key: String) raises -> String:
     """Get a string value from doc[section][key]. Raises if not found."""
     if section in doc.sections:
         var sec = doc.sections[section].copy()
@@ -230,7 +230,7 @@ fn toml_get(doc: TomlDoc, section: String, key: String) raises -> String:
     raise Error("TOML key not found: [" + section + "] " + key)
 
 
-fn toml_get_or(doc: TomlDoc, section: String, key: String, default: String) -> String:
+def toml_get_or(doc: TomlDoc, section: String, key: String, default: String) -> String:
     """Get a string value, returning default if not found."""
     try:
         if section in doc.sections:
@@ -242,11 +242,11 @@ fn toml_get_or(doc: TomlDoc, section: String, key: String, default: String) -> S
     return default
 
 
-fn toml_has_section(doc: TomlDoc, section: String) -> Bool:
+def toml_has_section(doc: TomlDoc, section: String) -> Bool:
     return section in doc.sections
 
 
-fn toml_get_inline(doc: TomlDoc, section: String, key: String, sub_key: String) raises -> String:
+def toml_get_inline(doc: TomlDoc, section: String, key: String, sub_key: String) raises -> String:
     """Get a value from an inline table: doc[section][key][sub_key]."""
     var inline_section = section + "." + key
     if inline_section in doc.sections:
@@ -256,7 +256,7 @@ fn toml_get_inline(doc: TomlDoc, section: String, key: String, sub_key: String) 
     raise Error("TOML inline key not found: [" + section + "] " + key + "." + sub_key)
 
 
-fn toml_section_keys(doc: TomlDoc, section: String) raises -> List[String]:
+def toml_section_keys(doc: TomlDoc, section: String) raises -> List[String]:
     """Return all keys in a section."""
     if section in doc.sections:
         var result = List[String]()

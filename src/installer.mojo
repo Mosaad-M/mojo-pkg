@@ -10,7 +10,7 @@ from validate import validate_name, validate_version, validate_tarball_url
 from flags import write_flags_cache
 
 
-fn _bytes_to_hex(data: List[UInt8]) -> String:
+def _bytes_to_hex(data: List[UInt8]) -> String:
     """Convert a byte list to a lowercase hex string."""
     alias HEX = "0123456789abcdef"
     var hb = HEX.as_bytes()
@@ -22,7 +22,7 @@ fn _bytes_to_hex(data: List[UInt8]) -> String:
     return String(unsafe_from_utf8=out^)
 
 
-fn sha256_hex(data: String) -> String:
+def sha256_hex(data: String) -> String:
     """Return SHA-256 hex digest of a string's bytes."""
     var span = data.as_bytes()
     var bytes = List[UInt8](capacity=len(span))
@@ -32,13 +32,13 @@ fn sha256_hex(data: String) -> String:
     return _bytes_to_hex(digest)
 
 
-fn sha256_hex_bytes(data: List[UInt8]) -> String:
+def sha256_hex_bytes(data: List[UInt8]) -> String:
     """Return SHA-256 hex digest of a byte list."""
     var digest = sha256(data)
     return _bytes_to_hex(digest)
 
 
-fn install_package(pkg: LockedPackage, mut client: HttpClient) raises:
+def install_package(pkg: LockedPackage, mut client: HttpClient) raises:
     """Download, verify, and unpack a single package."""
     # Validate all fields before constructing any paths or commands
     validate_name(pkg.name)
@@ -108,7 +108,7 @@ fn install_package(pkg: LockedPackage, mut client: HttpClient) raises:
             print("  Warning: could not compile C deps for " + pkg.name + ": " + String(e))
 
 
-fn _compile_c_deps(install_path: String, c_deps: List[CDependency]) raises:
+def _compile_c_deps(install_path: String, c_deps: List[CDependency]) raises:
     """Compile C library dependencies for a package."""
     if len(c_deps) == 0:
         return
@@ -128,7 +128,7 @@ fn _compile_c_deps(install_path: String, c_deps: List[CDependency]) raises:
         fs_run_check(cmd)
 
 
-fn install_all(packages: List[LockedPackage], mut client: HttpClient) raises:
+def install_all(packages: List[LockedPackage], mut client: HttpClient) raises:
     """Install all packages in a lockfile."""
     for i in range(len(packages)):
         install_package(packages[i], client)

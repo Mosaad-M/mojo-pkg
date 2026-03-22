@@ -3,7 +3,7 @@
 # Enforced at all trust boundaries: registry fetch, install, manifest parse.
 
 
-fn validate_name(name: String) raises:
+def validate_name(name: String) raises:
     """Reject invalid package names.
     Allowed: [a-z0-9][a-z0-9_-]*, max 64 chars.
     Note: only ASCII characters are checked; non-ASCII bytes are rejected implicitly
@@ -33,7 +33,7 @@ fn validate_name(name: String) raises:
             )
 
 
-fn validate_version(version: String) raises:
+def validate_version(version: String) raises:
     """Reject versions that aren't X.Y.Z (digits and dots only)."""
     var bytes = version.as_bytes()
     var n = len(bytes)
@@ -68,7 +68,7 @@ fn validate_version(version: String) raises:
             raise Error("Invalid version: '" + version + "' (consecutive dots)")
 
 
-fn validate_tarball_url(url: String) raises:
+def validate_tarball_url(url: String) raises:
     """Reject tarball URLs that don't start with https://github.com/ and contain
     any character outside the strict allowlist A-Za-z0-9/-_.:%=?&#@."""
     alias PREFIX = "https://github.com/"
@@ -102,7 +102,7 @@ fn validate_tarball_url(url: String) raises:
             raise Error("Insecure tarball URL: contains disallowed character")
 
 
-fn validate_cdep_name(name: String) raises:
+def validate_cdep_name(name: String) raises:
     """Reject C dep library names that could inject shell flags.
     Allowed: [a-z0-9_-]+, max 64 chars. No spaces or special characters."""
     var bytes = name.as_bytes()
@@ -132,7 +132,7 @@ fn validate_cdep_name(name: String) raises:
             )
 
 
-fn validate_cdep_source(source: String) raises:
+def validate_cdep_source(source: String) raises:
     """Reject C dep source paths containing '/' or '..' (path traversal)."""
     var bytes = source.as_bytes()
     var n = len(bytes)
