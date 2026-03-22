@@ -266,7 +266,7 @@ def main() raises:
     elif cmd == "list":
         cmd_list()
     elif cmd == "version":
-        print("mojo-pkg 0.1.0")
+        print("mojo-pkg 0.4.3")
     elif cmd == "help" or cmd == "--help" or cmd == "-h":
         print_usage()
     else:
