@@ -20,6 +20,8 @@ Verify the download:
 sha256sum -c mojo-pkg-linux-64.tar.gz.sha256
 ```
 
+> **Note:** The release tarball contains two files: `mojo-pkg` (a shell wrapper) and `mojo-pkg-bin` (the compiled binary). The wrapper automatically sets `LD_LIBRARY_PATH` to the Mojo runtime libs — you don't need to set it manually.
+
 ## Build from Source
 
 ### Prerequisites

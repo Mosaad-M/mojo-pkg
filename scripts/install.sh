@@ -16,4 +16,5 @@ sed -i 's|mojo-pkg-linux-64.tar.gz|mojo-pkg.tar.gz|' mojo-pkg.tar.gz.sha256
 sha256sum -c mojo-pkg.tar.gz.sha256 || { echo "SHA256 mismatch — aborting"; exit 1; }
 
 tar xz -C "$INSTALL_DIR" -f mojo-pkg.tar.gz
+chmod +x "$INSTALL_DIR/mojo-pkg" "$INSTALL_DIR/mojo-pkg-bin"
 echo "Done. Add to PATH: export PATH=\"$INSTALL_DIR:\$PATH\""

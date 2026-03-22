@@ -66,10 +66,10 @@ jobs:
 
       - name: Build binary
         run: pixi run build
-        # Produces ~/.mojo/bin/mojo-pkg
+        # Produces ~/.mojo/bin/mojo-pkg-bin (binary) and ~/.mojo/bin/mojo-pkg (wrapper)
 
       - name: Package binary
-        run: tar czf mojo-pkg-linux-64.tar.gz -C "$HOME/.mojo/bin" mojo-pkg
+        run: tar czf mojo-pkg-linux-64.tar.gz -C "$HOME/.mojo/bin" mojo-pkg-bin mojo-pkg
 
       - name: Generate SHA256
         run: sha256sum mojo-pkg-linux-64.tar.gz > mojo-pkg-linux-64.tar.gz.sha256
