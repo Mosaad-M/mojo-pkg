@@ -16,7 +16,7 @@ jobs:
       - name: Clone tls
         run: |
           git clone https://github.com/Mosaad-M/tls.git ../tls_pure
-          git -C ../tls_pure checkout 449046bfa7c95aa971b004c07694679c52d8aba3
+          git -C ../tls_pure checkout 3bec13c0c1f58e7b83a5185470039436e1285ccc
 
       - name: Install pixi
         uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
@@ -34,7 +34,49 @@ jobs:
       - name: Clone tls
         run: |
           git clone https://github.com/Mosaad-M/tls.git ../tls_pure
-          git -C ../tls_pure checkout 449046bfa7c95aa971b004c07694679c52d8aba3
+          git -C ../tls_pure checkout 3bec13c0c1f58e7b83a5185470039436e1285ccc
+
+      - name: Install pixi
+        uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
+
+      - name: Build binary
+        run: pixi run build
+
+      - name: Smoke test
+        run: |
+          ~/.mojo/bin/mojo-pkg version | grep -q "mojo-pkg"
+          ~/.mojo/bin/mojo-pkg help 2>&1 | grep -q "install"
+          echo "PASS: binary smoke tests"
+
+  test-macos:
+    runs-on: macos-14
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Clone tls
+        run: |
+          git clone https://github.com/Mosaad-M/tls.git ../tls_pure
+          git -C ../tls_pure checkout 3bec13c0c1f58e7b83a5185470039436e1285ccc
+
+      - name: Install pixi
+        uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
+
+      - name: Run all tests
+        run: pixi run test
+
+  build-and-smoke-macos:
+    runs-on: macos-14
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Clone tls
+        run: |
+          git clone https://github.com/Mosaad-M/tls.git ../tls_pure
+          git -C ../tls_pure checkout 3bec13c0c1f58e7b83a5185470039436e1285ccc
 
       - name: Install pixi
         uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4

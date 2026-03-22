@@ -3,7 +3,7 @@
 
 from collections import Dict
 from toml import TomlDoc, toml_parse, toml_get, toml_get_or, toml_has_section, toml_get_inline, toml_section_keys
-from fs import fs_read_file, fs_write_file
+from fs import fs_read_file, fs_write_file, current_platform
 from validate import validate_cdep_source, validate_cdep_name, validate_name
 
 
@@ -94,7 +94,7 @@ def manifest_parse_str(src: String) raises -> Manifest:
     m.mojo_requires = toml_get_or(doc, "mojo", "requires", ">=0.26.1")
 
     # [package] platforms
-    var plat_raw = toml_get_or(doc, "package", "platforms", "linux-64")
+    var plat_raw = toml_get_or(doc, "package", "platforms", current_platform())
     var plat_bytes = plat_raw.as_bytes()
     if len(plat_bytes) > 0 and plat_bytes[0] == 91:  # [
         # Strip [ and ]

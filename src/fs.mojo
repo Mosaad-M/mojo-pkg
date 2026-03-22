@@ -213,3 +213,53 @@ def fs_rm_rf(path: String) raises:
     var ret = fs_run("rm -rf " + _shell_quote(path))
     if ret != 0:
         raise Error("rm -rf failed: " + path)
+
+
+def fs_run_output(cmd: String) raises -> String:
+    """Run cmd via popen() and return trimmed stdout."""
+    var cb = cmd.as_bytes()
+    var cn = len(cb)
+    var cbuf = alloc[UInt8](cn + 1)
+    for i in range(cn):
+        (cbuf + i)[] = cb[i]
+    (cbuf + cn)[] = 0
+    var mode = alloc[UInt8](2)
+    mode[] = 114  # 'r'
+    (mode + 1)[] = 0
+    var fp = external_call["popen", Int](cbuf, mode)
+    cbuf.free()
+    mode.free()
+    if fp == 0:
+        return String("")
+    var out = List[UInt8]()
+    var rbuf = alloc[UInt8](256)
+    while True:
+        var nr = external_call["fread", Int](rbuf, Int(1), Int(255), fp)
+        if nr <= 0:
+            break
+        for i in range(nr):
+            out.append((rbuf + i)[])
+    rbuf.free()
+    _ = external_call["pclose", Int32](fp)
+    var end = len(out)
+    while end > 0 and (out[end - 1] == UInt8(10) or out[end - 1] == UInt8(13)):
+        end -= 1
+    var trimmed = List[UInt8]()
+    for i in range(end):
+        trimmed.append(out[i])
+    if len(trimmed) == 0:
+        return String("")
+    return String(unsafe_from_utf8=trimmed^)
+
+
+def current_platform() -> String:
+    """Return pixi-style platform string for current host (e.g. 'linux-64', 'osx-arm64')."""
+    if platform_name() == "linux":
+        return String("linux-64")
+    try:
+        var arch = fs_run_output("uname -m")
+        if arch == "arm64" or arch == "aarch64":
+            return String("osx-arm64")
+        return String("osx-64")
+    except:
+        return String("osx-arm64")

@@ -4,23 +4,38 @@ A package manager CLI for Mojo, written in pure Mojo.
 
 ## Installation
 
-### Quick install (Linux x86_64)
+### Supported platforms
+
+| Platform | Archive |
+|----------|---------|
+| Linux x86_64 | `mojo-pkg-linux-64.tar.gz` |
+| macOS ARM64 (Apple Silicon) | `mojo-pkg-osx-arm64.tar.gz` |
+
+### Quick install (Linux and macOS)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Mosaad-M/mojo-pkg/main/scripts/install.sh | bash
 ```
 
+The script auto-detects your platform and downloads the correct binary.
+
 ### Manual
 
 Download from [GitHub Releases](https://github.com/Mosaad-M/mojo-pkg/releases/latest), extract, and add `~/.mojo/bin` to your PATH.
 
-Verify the download:
+Verify the download (Linux):
 
 ```bash
 sha256sum -c mojo-pkg-linux-64.tar.gz.sha256
 ```
 
-> **Note:** The release tarball contains two files: `mojo-pkg` (a shell wrapper) and `mojo-pkg-bin` (the compiled binary). The wrapper automatically sets `LD_LIBRARY_PATH` to the Mojo runtime libs — you don't need to set it manually.
+Verify the download (macOS):
+
+```bash
+shasum -a 256 -c mojo-pkg-osx-arm64.tar.gz.sha256
+```
+
+> **Note:** The release tarball contains two files: `mojo-pkg` (a shell wrapper) and `mojo-pkg-bin` (the compiled binary). The wrapper automatically sets `LD_LIBRARY_PATH` (Linux) or `DYLD_LIBRARY_PATH` (macOS) to the Mojo runtime libs — you don't need to set it manually.
 
 ## Build from Source
 
