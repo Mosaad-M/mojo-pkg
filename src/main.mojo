@@ -16,7 +16,7 @@ from resolver import resolve
 from installer import install_all
 from flags import write_flags_file, print_flags
 from registry import registry_fetch_package, registry_search, PackageMeta
-from fs import fs_exists, fs_mkdir_p, fs_home_dir, fs_rm_rf
+from fs import fs_exists, fs_mkdir_p, fs_home_dir, fs_rm_rf, current_platform
 
 
 def print_usage():
@@ -184,7 +184,7 @@ def cmd_add(pkg_name: String) raises:
         manifest.name = String("my-project")
         manifest.version = String("0.1.0")
         manifest.mojo_requires = String(">=0.26.1")
-        manifest.platforms.append("linux-64")
+        manifest.platforms.append(current_platform())
 
     manifest_add_dep(manifest, pkg_name, meta.git_url, constraint)
     manifest_write(manifest, "mojoproject.toml")

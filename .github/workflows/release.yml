@@ -16,7 +16,7 @@ jobs:
       - name: Clone tls
         run: |
           git clone https://github.com/Mosaad-M/tls.git ../tls_pure
-          git -C ../tls_pure checkout 449046bfa7c95aa971b004c07694679c52d8aba3
+          git -C ../tls_pure checkout f0f3db0b428ee93d1e6bd30979a2673bff7dd422
 
       - name: Install pixi
         uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
@@ -24,7 +24,25 @@ jobs:
       - name: Run all tests
         run: pixi run test
 
-  build-and-smoke:
+  test-macos:
+    runs-on: macos-14
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Clone tls
+        run: |
+          git clone https://github.com/Mosaad-M/tls.git ../tls_pure
+          git -C ../tls_pure checkout f0f3db0b428ee93d1e6bd30979a2673bff7dd422
+
+      - name: Install pixi
+        uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
+
+      - name: Run all tests
+        run: pixi run test
+
+  build-linux:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -34,7 +52,46 @@ jobs:
       - name: Clone tls
         run: |
           git clone https://github.com/Mosaad-M/tls.git ../tls_pure
-          git -C ../tls_pure checkout 449046bfa7c95aa971b004c07694679c52d8aba3
+          git -C ../tls_pure checkout f0f3db0b428ee93d1e6bd30979a2673bff7dd422
+
+      - name: Install pixi
+        uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
+
+      - name: Build binary
+        run: pixi run build
+        # Produces ~/.mojo/bin/mojo-pkg-bin (binary) and ~/.mojo/bin/mojo-pkg (wrapper)
+
+      - name: Smoke test
+        run: |
+          ~/.mojo/bin/mojo-pkg version | grep -q "mojo-pkg"
+          ~/.mojo/bin/mojo-pkg help 2>&1 | grep -q "install"
+          echo "PASS: binary smoke tests"
+
+      - name: Package binary
+        run: tar czf mojo-pkg-linux-64.tar.gz -C "$HOME/.mojo/bin" mojo-pkg-bin mojo-pkg
+
+      - name: Generate SHA256
+        run: sha256sum mojo-pkg-linux-64.tar.gz > mojo-pkg-linux-64.tar.gz.sha256
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: linux-64
+          path: |
+            mojo-pkg-linux-64.tar.gz
+            mojo-pkg-linux-64.tar.gz.sha256
+
+  build-macos:
+    runs-on: macos-14
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Clone tls
+        run: |
+          git clone https://github.com/Mosaad-M/tls.git ../tls_pure
+          git -C ../tls_pure checkout f0f3db0b428ee93d1e6bd30979a2673bff7dd422
 
       - name: Install pixi
         uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
@@ -48,31 +105,35 @@ jobs:
           ~/.mojo/bin/mojo-pkg help 2>&1 | grep -q "install"
           echo "PASS: binary smoke tests"
 
+      - name: Package binary
+        run: tar czf mojo-pkg-osx-arm64.tar.gz -C "$HOME/.mojo/bin" mojo-pkg-bin mojo-pkg
+
+      - name: Generate SHA256
+        run: shasum -a 256 mojo-pkg-osx-arm64.tar.gz > mojo-pkg-osx-arm64.tar.gz.sha256
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: osx-arm64
+          path: |
+            mojo-pkg-osx-arm64.tar.gz
+            mojo-pkg-osx-arm64.tar.gz.sha256
+
   release:
-    needs: [test, build-and-smoke]
+    needs: [test, test-macos, build-linux, build-macos]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Download Linux artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: linux-64
 
-      - name: Clone tls
-        run: |
-          git clone https://github.com/Mosaad-M/tls.git ../tls_pure
-          git -C ../tls_pure checkout 449046bfa7c95aa971b004c07694679c52d8aba3
-
-      - name: Install pixi
-        uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
-
-      - name: Build binary
-        run: pixi run build
-        # Produces ~/.mojo/bin/mojo-pkg-bin (binary) and ~/.mojo/bin/mojo-pkg (wrapper)
-
-      - name: Package binary
-        run: tar czf mojo-pkg-linux-64.tar.gz -C "$HOME/.mojo/bin" mojo-pkg-bin mojo-pkg
-
-      - name: Generate SHA256
-        run: sha256sum mojo-pkg-linux-64.tar.gz > mojo-pkg-linux-64.tar.gz.sha256
+      - name: Download macOS artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: osx-arm64
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1 (latest; node20 — update when node24 version released)
@@ -80,3 +141,5 @@ jobs:
           files: |
             mojo-pkg-linux-64.tar.gz
             mojo-pkg-linux-64.tar.gz.sha256
+            mojo-pkg-osx-arm64.tar.gz
+            mojo-pkg-osx-arm64.tar.gz.sha256
