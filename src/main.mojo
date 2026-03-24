@@ -24,7 +24,7 @@ def print_usage():
     print("")
     print("Usage:")
     print("  mojo-pkg install          Resolve and install dependencies")
-    print("  mojo-pkg update           Re-resolve deps to latest versions")
+    print("  mojo-pkg update [--dry-run]  Re-resolve deps to latest versions")
     print("  mojo-pkg add <name>       Add a dependency from the registry")
     print("  mojo-pkg remove <name>    Remove a dependency")
     print("  mojo-pkg flags            Print -I/-Xlinker flags to stdout")
@@ -76,7 +76,7 @@ def cmd_install() raises:
     print("Done! Use $(cat .mojo_flags) in your mojo build command.")
 
 
-def cmd_update() raises:
+def cmd_update(dry_run: Bool = False) raises:
     """Re-resolve all deps to latest satisfying versions, update mojo.lock."""
     if not fs_exists("mojoproject.toml"):
         raise Error("No mojoproject.toml found in current directory")
@@ -93,7 +93,6 @@ def cmd_update() raises:
     # Force re-resolve (ignore existing mojo.lock)
     print("Re-resolving dependencies...")
     var lock = resolve(manifest, client)
-    lockfile_write(lock, "mojo.lock")
 
     # Report changes
     var n_changed = 0
@@ -104,14 +103,20 @@ def cmd_update() raises:
         if old_idx >= 0:
             var old_ver = old_lock.packages[old_idx].version
             if old_ver != new_ver:
-                print("  Upgraded: " + name + " " + old_ver + " -> " + new_ver)
+                print("  " + ("Would upgrade" if dry_run else "Upgraded") + ": " + name + " " + old_ver + " -> " + new_ver)
                 n_changed += 1
             else:
                 print("  Unchanged: " + name + " " + new_ver)
         else:
-            print("  Added: " + name + " " + new_ver)
+            print("  " + ("Would add" if dry_run else "Added") + ": " + name + " " + new_ver)
             n_changed += 1
 
+    if dry_run:
+        print(String(n_changed) + " package(s) would change.")
+        print("(dry run — no packages installed)")
+        return
+
+    lockfile_write(lock, "mojo.lock")
     install_all(lock.packages, client)
     write_flags_file(lock, ".mojo_flags")
     print(String(n_changed) + " package(s) changed.")
@@ -251,7 +256,8 @@ def main() raises:
     if cmd == "install":
         cmd_install()
     elif cmd == "update":
-        cmd_update()
+        var dry_run = len(args) > 2 and args[2] == "--dry-run"
+        cmd_update(dry_run)
     elif cmd == "add":
         var pkg = args[2] if len(args) > 2 else ""
         cmd_add(pkg)

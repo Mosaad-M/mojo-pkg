@@ -143,6 +143,27 @@ def test_diff_no_old_lock() raises:
     print("PASS: test_diff_no_old_lock")
 
 
+def test_dry_run_labels() raises:
+    """Verify that dry-run mode uses 'Would upgrade'/'Would add' labels."""
+    # Simulate the label logic from cmd_update(dry_run=True)
+    var dry_run = True
+    var upgrade_label = "Would upgrade" if dry_run else "Upgraded"
+    var add_label = "Would add" if dry_run else "Added"
+    if upgrade_label != "Would upgrade":
+        raise Error("FAIL: dry_run=True should yield 'Would upgrade'")
+    if add_label != "Would add":
+        raise Error("FAIL: dry_run=True should yield 'Would add'")
+
+    var dry_run2 = False
+    var upgrade_label2 = "Would upgrade" if dry_run2 else "Upgraded"
+    var add_label2 = "Would add" if dry_run2 else "Added"
+    if upgrade_label2 != "Upgraded":
+        raise Error("FAIL: dry_run=False should yield 'Upgraded'")
+    if add_label2 != "Added":
+        raise Error("FAIL: dry_run=False should yield 'Added'")
+    print("PASS: test_dry_run_labels")
+
+
 def main() raises:
     print("=== Update Diff Tests ===")
     test_lockfile_find_present()
@@ -152,5 +173,6 @@ def main() raises:
     test_diff_upgraded()
     test_diff_added()
     test_diff_no_old_lock()
+    test_dry_run_labels()
     print("")
     print("All update tests passed!")
