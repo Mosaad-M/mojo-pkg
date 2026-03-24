@@ -1,6 +1,6 @@
 [package]
 name = "mojo-pkg"
-version = "0.1.0"
+version = "0.5.0"
 description = "Mojo package manager — fetch, resolve, and install Mojo packages"
 license = "MIT"
 platforms = ["linux-64", "osx-arm64"]
