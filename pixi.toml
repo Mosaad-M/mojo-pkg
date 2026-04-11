@@ -7,25 +7,22 @@ version = "0.5.1"
 [dependencies]
 mojo = ">=0.26.2"
 
-[activation]
-env = { TLS_PURE = "../tls_pure" }
-
 [tasks]
 build = "bash build_and_run.sh"
 install-tool = "bash build_and_run.sh"
 
-test-toml     = "mojo run -I src -I $TLS_PURE tests/test_toml.mojo"
-test-manifest = "mojo run -I src -I $TLS_PURE tests/test_manifest.mojo"
-test-semver   = "mojo run -I src -I $TLS_PURE tests/test_semver.mojo"
-test-validate = "mojo run -I src -I $TLS_PURE tests/test_validate.mojo"
-test-lockfile = "mojo run -I src -I $TLS_PURE tests/test_lockfile.mojo"
-test-flags    = "mojo run -I src -I $TLS_PURE tests/test_flags.mojo"
-test-json     = "mojo run -I src -I $TLS_PURE tests/test_json.mojo"
-test-url       = "mojo run -I src -I $TLS_PURE tests/test_url.mojo"
-test-installer = "mojo run -I src -I $TLS_PURE tests/test_installer.mojo"
-test-update    = "mojo run -I src -I $TLS_PURE tests/test_update.mojo"
-test-remove    = "mojo run -I src -I $TLS_PURE tests/test_remove.mojo"
-test-tcp       = "mojo run -I src -I $TLS_PURE tests/test_tcp.mojo"
+test-toml     = "bash -c 'T=\"${TLS_PURE:-$(ls -d ../tls_pure ../tls 2>/dev/null | head -1)}\"; mojo run -I src -I \"$T\" tests/test_toml.mojo'"
+test-manifest = "bash -c 'T=\"${TLS_PURE:-$(ls -d ../tls_pure ../tls 2>/dev/null | head -1)}\"; mojo run -I src -I \"$T\" tests/test_manifest.mojo'"
+test-semver   = "bash -c 'T=\"${TLS_PURE:-$(ls -d ../tls_pure ../tls 2>/dev/null | head -1)}\"; mojo run -I src -I \"$T\" tests/test_semver.mojo'"
+test-validate = "bash -c 'T=\"${TLS_PURE:-$(ls -d ../tls_pure ../tls 2>/dev/null | head -1)}\"; mojo run -I src -I \"$T\" tests/test_validate.mojo'"
+test-lockfile = "bash -c 'T=\"${TLS_PURE:-$(ls -d ../tls_pure ../tls 2>/dev/null | head -1)}\"; mojo run -I src -I \"$T\" tests/test_lockfile.mojo'"
+test-flags    = "bash -c 'T=\"${TLS_PURE:-$(ls -d ../tls_pure ../tls 2>/dev/null | head -1)}\"; mojo run -I src -I \"$T\" tests/test_flags.mojo'"
+test-json     = "bash -c 'T=\"${TLS_PURE:-$(ls -d ../tls_pure ../tls 2>/dev/null | head -1)}\"; mojo run -I src -I \"$T\" tests/test_json.mojo'"
+test-url      = "bash -c 'T=\"${TLS_PURE:-$(ls -d ../tls_pure ../tls 2>/dev/null | head -1)}\"; mojo run -I src -I \"$T\" tests/test_url.mojo'"
+test-installer = "bash -c 'T=\"${TLS_PURE:-$(ls -d ../tls_pure ../tls 2>/dev/null | head -1)}\"; mojo run -I src -I \"$T\" tests/test_installer.mojo'"
+test-update   = "bash -c 'T=\"${TLS_PURE:-$(ls -d ../tls_pure ../tls 2>/dev/null | head -1)}\"; mojo run -I src -I \"$T\" tests/test_update.mojo'"
+test-remove   = "bash -c 'T=\"${TLS_PURE:-$(ls -d ../tls_pure ../tls 2>/dev/null | head -1)}\"; mojo run -I src -I \"$T\" tests/test_remove.mojo'"
+test-tcp      = "bash -c 'T=\"${TLS_PURE:-$(ls -d ../tls_pure ../tls 2>/dev/null | head -1)}\"; mojo run -I src -I \"$T\" tests/test_tcp.mojo'"
 
 test = { depends-on = ["test-toml", "test-manifest", "test-semver", "test-validate", "test-lockfile", "test-flags", "test-json", "test-url", "test-installer", "test-update", "test-remove", "test-tcp"] }
 

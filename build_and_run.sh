@@ -18,7 +18,7 @@ else
 fi
 
 echo "Building mojo-pkg..."
-TLS_PURE="${TLS_PURE:-$(cd "$SELF/../tls_pure" 2>/dev/null && pwd || echo "$SELF/../tls_pure")}"
+TLS_PURE="${TLS_PURE:-$(ls -d "$SELF/../tls_pure" "$SELF/../tls" 2>/dev/null | head -1)}"
 PKG_VERSION="$(grep '^version' "$SELF/pixi.toml" | head -1 | sed 's/.*= *"\(.*\)"/\1/')"
 mojo build "$SELF/src/main.mojo" \
     $MCPU_FLAG \
