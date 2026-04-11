@@ -9,6 +9,9 @@
 #   mojo-pkg list             — list installed packages from mojo.lock
 
 from sys import argv
+from std.sys.defines import get_defined_string
+
+comptime VERSION = get_defined_string["MOJO_PKG_VERSION", "dev"]()
 from http_client import HttpClient
 from manifest import Manifest, manifest_parse, manifest_write, manifest_add_dep, manifest_remove_dep
 from lockfile import LockFile, lockfile_read, lockfile_write, lockfile_find
@@ -272,7 +275,7 @@ def main() raises:
     elif cmd == "list":
         cmd_list()
     elif cmd == "version":
-        print("mojo-pkg 0.5.0")
+        print("mojo-pkg " + VERSION)
     elif cmd == "help" or cmd == "--help" or cmd == "-h":
         print_usage()
     else:

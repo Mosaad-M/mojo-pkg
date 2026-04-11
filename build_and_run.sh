@@ -19,8 +19,10 @@ fi
 
 echo "Building mojo-pkg..."
 TLS_PURE="${TLS_PURE:-$(cd "$SELF/../tls_pure" 2>/dev/null && pwd || echo "$SELF/../tls_pure")}"
+PKG_VERSION="$(grep '^version' "$SELF/pixi.toml" | head -1 | sed 's/.*= *"\(.*\)"/\1/')"
 mojo build "$SELF/src/main.mojo" \
     $MCPU_FLAG \
+    -D MOJO_PKG_VERSION="$PKG_VERSION" \
     -I "$SELF/src" \
     -I "$TLS_PURE" \
     -o "$INSTALL_DIR/mojo-pkg-bin"
