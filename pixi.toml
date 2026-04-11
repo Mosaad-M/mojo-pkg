@@ -8,7 +8,7 @@ version = "0.5.1"
 mojo = ">=0.26.2"
 
 [activation]
-env = { TLS_PURE = "../tls_pure" }
+scripts = ["scripts/activate.sh"]
 
 [tasks]
 build = "bash build_and_run.sh"
@@ -21,11 +21,11 @@ test-validate = "mojo run -I src -I $TLS_PURE tests/test_validate.mojo"
 test-lockfile = "mojo run -I src -I $TLS_PURE tests/test_lockfile.mojo"
 test-flags    = "mojo run -I src -I $TLS_PURE tests/test_flags.mojo"
 test-json     = "mojo run -I src -I $TLS_PURE tests/test_json.mojo"
-test-url       = "mojo run -I src -I $TLS_PURE tests/test_url.mojo"
+test-url      = "mojo run -I src -I $TLS_PURE tests/test_url.mojo"
 test-installer = "mojo run -I src -I $TLS_PURE tests/test_installer.mojo"
-test-update    = "mojo run -I src -I $TLS_PURE tests/test_update.mojo"
-test-remove    = "mojo run -I src -I $TLS_PURE tests/test_remove.mojo"
-test-tcp       = "mojo run -I src -I $TLS_PURE tests/test_tcp.mojo"
+test-update   = "mojo run -I src -I $TLS_PURE tests/test_update.mojo"
+test-remove   = "mojo run -I src -I $TLS_PURE tests/test_remove.mojo"
+test-tcp      = "mojo run -I src -I $TLS_PURE tests/test_tcp.mojo"
 
 test = { depends-on = ["test-toml", "test-manifest", "test-semver", "test-validate", "test-lockfile", "test-flags", "test-json", "test-url", "test-installer", "test-update", "test-remove", "test-tcp"] }
 

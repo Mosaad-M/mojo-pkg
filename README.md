@@ -43,7 +43,11 @@ shasum -a 256 -c mojo-pkg-osx-arm64.tar.gz.sha256
 
 - [pixi](https://pixi.sh) for environment management
 - Mojo ≥ 0.26.1 (via pixi)
-- A sibling `tls_pure/` directory at `../tls_pure` — clone with `git clone https://github.com/Mosaad-M/tls.git ../tls_pure` (or set `TLS_PURE` env var to a custom path)
+- The [tls](https://github.com/Mosaad-M/tls) repo cloned as a sibling directory. The build and test scripts check for `../tls_pure` then `../tls` automatically, so either name works:
+  ```bash
+  git clone https://github.com/Mosaad-M/tls.git ../tls_pure  # or ../tls
+  ```
+  Alternatively, set `TLS_PURE=/path/to/your/clone` to point anywhere.
 
 ```bash
 pixi run build
