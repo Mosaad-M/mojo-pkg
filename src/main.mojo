@@ -8,7 +8,7 @@
 #   mojo-pkg search <query>   — search the registry
 #   mojo-pkg list             — list installed packages from mojo.lock
 
-from sys import argv
+from std.sys import argv
 from std.sys.defines import get_defined_string
 
 comptime VERSION = get_defined_string["MOJO_PKG_VERSION", "dev"]()
