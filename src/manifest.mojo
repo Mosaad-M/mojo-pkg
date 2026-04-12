@@ -1,7 +1,7 @@
 # src/manifest.mojo
 # Parse and write mojoproject.toml package descriptors.
 
-from collections import Dict
+from std.collections import Dict
 from toml import TomlDoc, toml_parse, toml_get, toml_get_or, toml_has_section, toml_get_inline, toml_section_keys
 from fs import fs_read_file, fs_write_file, current_platform
 from validate import validate_cdep_source, validate_cdep_name, validate_name

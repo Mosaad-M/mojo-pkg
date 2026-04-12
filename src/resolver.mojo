@@ -2,7 +2,7 @@
 # Greedy semver dependency resolver (v1).
 # Picks newest version satisfying each constraint, resolves transitively.
 
-from collections import Dict
+from std.collections import Dict
 from http_client import HttpClient
 from manifest import Manifest, Dependency
 from lockfile import LockFile, LockedPackage, lockfile_find

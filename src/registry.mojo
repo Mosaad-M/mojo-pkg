@@ -2,12 +2,12 @@
 # Fetch package metadata from the GitHub-backed mojo-pkg-index.
 # Index lives at: https://raw.githubusercontent.com/Mosaad-M/mojo-pkg-index/main/
 
-from collections import Dict
+from std.collections import Dict
 from json import JsonValue, parse_json
 from http_client import HttpClient, HttpResponse
 from validate import validate_name, validate_tarball_url
 
-alias INDEX_BASE = "https://raw.githubusercontent.com/Mosaad-M/mojo-pkg-index/main"
+comptime INDEX_BASE = "https://raw.githubusercontent.com/Mosaad-M/mojo-pkg-index/main"
 
 
 struct PackageVersion(Copyable, Movable):

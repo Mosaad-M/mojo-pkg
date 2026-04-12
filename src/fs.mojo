@@ -7,7 +7,7 @@
 
 from std.ffi import external_call
 from std.memory.unsafe_pointer import alloc
-from os import getenv
+from std.os import getenv
 
 
 # ─── Platform detection ────────────────────────────────────────────────────────
