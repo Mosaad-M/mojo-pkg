@@ -18,15 +18,15 @@ struct Dependency(Copyable, Movable):
         self.git = git
         self.version = version
 
-    def __copyinit__(out self, copy: Self):
+    def __init__(out self, *, copy: Self):
         self.name = copy.name
         self.git = copy.git
         self.version = copy.version
 
-    def __moveinit__(out self, deinit take: Self):
-        self.name = take.name^
-        self.git = take.git^
-        self.version = take.version^
+    def __init__(out self, *, deinit move: Self):
+        self.name = move.name^
+        self.git = move.git^
+        self.version = move.version^
 
 
 struct CDependency(Copyable, Movable):
@@ -38,13 +38,13 @@ struct CDependency(Copyable, Movable):
         self.name = name
         self.source = source
 
-    def __copyinit__(out self, copy: Self):
+    def __init__(out self, *, copy: Self):
         self.name = copy.name
         self.source = copy.source
 
-    def __moveinit__(out self, deinit take: Self):
-        self.name = take.name^
-        self.source = take.source^
+    def __init__(out self, *, deinit move: Self):
+        self.name = move.name^
+        self.source = move.source^
 
 
 struct Manifest(Movable):
@@ -68,15 +68,15 @@ struct Manifest(Movable):
         self.deps = List[Dependency]()
         self.c_deps = List[CDependency]()
 
-    def __moveinit__(out self, deinit take: Self):
-        self.name = take.name^
-        self.version = take.version^
-        self.description = take.description^
-        self.license = take.license^
-        self.mojo_requires = take.mojo_requires^
-        self.platforms = take.platforms^
-        self.deps = take.deps^
-        self.c_deps = take.c_deps^
+    def __init__(out self, *, deinit move: Self):
+        self.name = move.name^
+        self.version = move.version^
+        self.description = move.description^
+        self.license = move.license^
+        self.mojo_requires = move.mojo_requires^
+        self.platforms = move.platforms^
+        self.deps = move.deps^
+        self.c_deps = move.c_deps^
 
 
 def manifest_parse_str(src: String) raises -> Manifest:
@@ -165,7 +165,7 @@ def manifest_parse_str(src: String) raises -> Manifest:
                         src = raw
                 except:
                     pass
-            if len(src) > 0:
+            if src.byte_length() > 0:
                 validate_cdep_name(lib_name)
                 validate_cdep_source(src)
                 m.c_deps.append(CDependency(lib_name, src))
@@ -206,9 +206,9 @@ def manifest_write(m: Manifest, path: String) raises:
     var content = String("[package]\n")
     content += "name = \"" + _toml_escape(m.name) + "\"\n"
     content += "version = \"" + _toml_escape(m.version) + "\"\n"
-    if len(m.description) > 0:
+    if m.description.byte_length() > 0:
         content += "description = \"" + _toml_escape(m.description) + "\"\n"
-    if len(m.license) > 0:
+    if m.license.byte_length() > 0:
         content += "license = \"" + _toml_escape(m.license) + "\"\n"
 
     # platforms

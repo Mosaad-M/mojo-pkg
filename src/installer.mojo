@@ -71,7 +71,7 @@ def install_package(pkg: LockedPackage, mut client: HttpClient) raises:
     fs_run_check(dl_cmd)
 
     # Verify SHA256 — empty sha256 is a fatal error (no integrity bypass)
-    if len(pkg.sha256) == 0:
+    if pkg.sha256.byte_length() == 0:
         raise Error("SHA256 is missing for " + pkg.name + " — refusing to install unverified package")
     var content = fs_read_file(tarball_path)
     var actual = sha256_hex(content)

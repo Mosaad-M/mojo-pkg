@@ -127,7 +127,7 @@ def cmd_update(dry_run: Bool = False) raises:
 
 def cmd_remove(pkg_name: String) raises:
     """Remove a package from mojoproject.toml, re-resolve, and delete its files."""
-    if len(pkg_name) == 0:
+    if pkg_name.byte_length() == 0:
         raise Error("Usage: mojo-pkg remove <package-name>")
 
     if not fs_exists("mojoproject.toml"):
@@ -168,7 +168,7 @@ def cmd_remove(pkg_name: String) raises:
 
 def cmd_add(pkg_name: String) raises:
     """Add a package: fetch latest version, update mojoproject.toml and mojo.lock."""
-    if len(pkg_name) == 0:
+    if pkg_name.byte_length() == 0:
         raise Error("Usage: mojo-pkg add <package-name>")
 
     var client = HttpClient()
@@ -227,7 +227,7 @@ def cmd_search(query: String) raises:
     var client = HttpClient()
     var results = registry_search(query, client)
     if len(results) == 0:
-        print("No packages found" + ((" matching '" + query + "'") if len(query) > 0 else ""))
+        print("No packages found" + ((" matching '" + query + "'") if query.byte_length() > 0 else ""))
         return
     print("Found " + String(len(results)) + " package(s):")
     for i in range(len(results)):

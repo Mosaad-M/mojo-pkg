@@ -23,15 +23,15 @@ struct SemVer(Copyable, Movable):
         self.minor = minor
         self.patch = patch
 
-    def __copyinit__(out self, copy: Self):
+    def __init__(out self, *, copy: Self):
         self.major = copy.major
         self.minor = copy.minor
         self.patch = copy.patch
 
-    def __moveinit__(out self, deinit take: Self):
-        self.major = take.major
-        self.minor = take.minor
-        self.patch = take.patch
+    def __init__(out self, *, deinit move: Self):
+        self.major = move.major
+        self.minor = move.minor
+        self.patch = move.patch
 
     def __lt__(self, other: Self) -> Bool:
         if self.major != other.major:
@@ -78,9 +78,9 @@ def semver_parse(version: String) raises -> SemVer:
         raise Error("Invalid semver: " + version)
 
     # Reject empty components (e.g. "1.", ".1.0", "1..0")
-    if len(String(parts[0])) == 0 or len(String(parts[1])) == 0:
+    if String(parts[0]).byte_length() == 0 or String(parts[1]).byte_length() == 0:
         raise Error("Invalid semver: empty component in " + version)
-    if len(parts) >= 3 and len(String(parts[2])) == 0:
+    if len(parts) >= 3 and String(parts[2]).byte_length() == 0:
         raise Error("Invalid semver: empty component in " + version)
 
     var major = _parse_int(String(parts[0]))
@@ -94,7 +94,7 @@ def semver_parse(version: String) raises -> SemVer:
 def semver_satisfies(version: String, constraint: String) raises -> Bool:
     """Check if version satisfies constraint.
     Supported: '>=X.Y.Z', '^X.Y.Z', '=X.Y.Z', '>X.Y.Z', '<X.Y.Z', '<=X.Y.Z'."""
-    if len(constraint) == 0:
+    if constraint.byte_length() == 0:
         return True
 
     var v = semver_parse(version)

@@ -25,19 +25,19 @@ struct PackageVersion(Copyable, Movable):
         self.mojo_requires = mojo_requires
         self.deps = List[String]()
 
-    def __copyinit__(out self, copy: Self):
+    def __init__(out self, *, copy: Self):
         self.version = copy.version
         self.tarball_url = copy.tarball_url
         self.sha256 = copy.sha256
         self.mojo_requires = copy.mojo_requires
         self.deps = copy.deps.copy()
 
-    def __moveinit__(out self, deinit take: Self):
-        self.version = take.version^
-        self.tarball_url = take.tarball_url^
-        self.sha256 = take.sha256^
-        self.mojo_requires = take.mojo_requires^
-        self.deps = take.deps^
+    def __init__(out self, *, deinit move: Self):
+        self.version = move.version^
+        self.tarball_url = move.tarball_url^
+        self.sha256 = move.sha256^
+        self.mojo_requires = move.mojo_requires^
+        self.deps = move.deps^
 
 
 struct PackageMeta(Copyable, Movable):
@@ -51,15 +51,15 @@ struct PackageMeta(Copyable, Movable):
         self.git_url = git_url
         self.versions = List[PackageVersion]()
 
-    def __copyinit__(out self, copy: Self):
+    def __init__(out self, *, copy: Self):
         self.name = copy.name
         self.git_url = copy.git_url
         self.versions = copy.versions.copy()
 
-    def __moveinit__(out self, deinit take: Self):
-        self.name = take.name^
-        self.git_url = take.git_url^
-        self.versions = take.versions^
+    def __init__(out self, *, deinit move: Self):
+        self.name = move.name^
+        self.git_url = move.git_url^
+        self.versions = move.versions^
 
 
 def _parse_package_json(root: JsonValue) raises -> PackageMeta:
@@ -140,6 +140,6 @@ def registry_search(query: String, mut client: HttpClient) raises -> List[String
     for i in range(n):
         var pkg_name = all_pkgs.get_string(i)
         # Simple substring match
-        if len(query) == 0 or pkg_name.find(query) >= 0:
+        if query.byte_length() == 0 or pkg_name.find(query) >= 0:
             result.append(pkg_name)
     return result^
