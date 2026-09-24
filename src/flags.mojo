@@ -40,7 +40,7 @@ def write_flags_file(lock: LockFile, path: String) raises:
     var inc = get_include_flags(lock)
     var lnk = get_linker_flags(lock)
     var content = inc
-    if len(lnk) > 0:
+    if lnk.byte_length() > 0:
         content += lnk
     # Trim trailing space
     var bytes = content.as_bytes()
@@ -68,7 +68,7 @@ def write_flags_cache(packages: List[LockedPackage]) raises:
     var inc = get_include_flags(tmp_lock)
     var lnk = get_linker_flags(tmp_lock)
     var content = inc
-    if len(lnk) > 0:
+    if lnk.byte_length() > 0:
         content += lnk
     fs_write_file(cache_path, content)
 
@@ -86,7 +86,7 @@ def print_flags(lock: LockFile) raises:
         var inc = get_include_flags(lock)
         var lnk = get_linker_flags(lock)
         content = inc
-        if len(lnk) > 0:
+        if lnk.byte_length() > 0:
             content += lnk
     # Trim trailing newline/space
     var bytes = content.as_bytes()

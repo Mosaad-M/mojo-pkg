@@ -20,19 +20,19 @@ struct LockedPackage(Copyable, Movable):
         self.sha256 = sha256
         self.install_path = install_path
 
-    def __copyinit__(out self, copy: Self):
+    def __init__(out self, *, copy: Self):
         self.name = copy.name
         self.version = copy.version
         self.source_url = copy.source_url
         self.sha256 = copy.sha256
         self.install_path = copy.install_path
 
-    def __moveinit__(out self, deinit take: Self):
-        self.name = take.name^
-        self.version = take.version^
-        self.source_url = take.source_url^
-        self.sha256 = take.sha256^
-        self.install_path = take.install_path^
+    def __init__(out self, *, deinit move: Self):
+        self.name = move.name^
+        self.version = move.version^
+        self.source_url = move.source_url^
+        self.sha256 = move.sha256^
+        self.install_path = move.install_path^
 
 
 struct LockFile(Movable):
@@ -44,9 +44,9 @@ struct LockFile(Movable):
         self.mojo_version = String("0.26.1")
         self.packages = List[LockedPackage]()
 
-    def __moveinit__(out self, deinit take: Self):
-        self.mojo_version = take.mojo_version^
-        self.packages = take.packages^
+    def __init__(out self, *, deinit move: Self):
+        self.mojo_version = move.mojo_version^
+        self.packages = move.packages^
 
 
 def lockfile_read(path: String) raises -> LockFile:

@@ -14,8 +14,8 @@ struct TomlDoc(Movable):
     def __init__(out self):
         self.sections = Dict[String, Dict[String, String]]()
 
-    def __moveinit__(out self, deinit take: Self):
-        self.sections = take.sections^
+    def __init__(out self, *, deinit move: Self):
+        self.sections = move.sections^
 
 
 def _trim(s: String) -> String:
@@ -167,7 +167,7 @@ def _parse_inline_table(s: String) raises -> Dict[String, String]:
                 i += 1
             val = _substr(s, val_start, i)
 
-        if len(key) > 0:
+        if key.byte_length() > 0:
             result[key] = val
 
         while i < n and bytes[i] != 44 and bytes[i] != 125:
@@ -187,7 +187,7 @@ def toml_parse(src: String) raises -> TomlDoc:
     var lines = src.split("\n")
     for line_s in lines:
         var line = _trim(String(line_s))
-        if len(line) == 0 or line.as_bytes()[0] == 35:  # #
+        if line.byte_length() == 0 or line.as_bytes()[0] == 35:  # #
             continue
 
         var bytes = line.as_bytes()

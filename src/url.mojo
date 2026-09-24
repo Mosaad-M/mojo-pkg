@@ -32,7 +32,7 @@ struct Url(Copyable, Movable):
         self.query = String("")
         self.raw = String("")
 
-    def __copyinit__(out self, copy: Self):
+    def __init__(out self, *, copy: Self):
         self.scheme = copy.scheme
         self.host = copy.host
         self.port = copy.port
@@ -40,13 +40,13 @@ struct Url(Copyable, Movable):
         self.query = copy.query
         self.raw = copy.raw
 
-    def __moveinit__(out self, deinit take: Self):
-        self.scheme = take.scheme^
-        self.host = take.host^
-        self.port = take.port
-        self.path = take.path^
-        self.query = take.query^
-        self.raw = take.raw^
+    def __init__(out self, *, deinit move: Self):
+        self.scheme = move.scheme^
+        self.host = move.host^
+        self.port = move.port
+        self.path = move.path^
+        self.query = move.query^
+        self.raw = move.raw^
 
     def request_path(self) -> String:
         """Return the path + query string for the HTTP request line.
@@ -56,7 +56,7 @@ struct Url(Copyable, Movable):
             /path?q=1      -> "/path?q=1"
             /              -> "/"
         """
-        if len(self.query) > 0:
+        if self.query.byte_length() > 0:
             return self.path + "?" + self.query
         return self.path
 
@@ -75,43 +75,43 @@ struct Url(Copyable, Movable):
 
 
 def _ptr_to_string(
-    data_ptr: UnsafePointer[UInt8, _], start: Int, end: Int
+    data_ptr: Pointer[UInt8, _], start: Int, end: Int
 ) -> String:
     """Materialize a String from a pointer byte range [start, end)."""
     if start < 0 or start >= end:
         return String("")
     var result = List[UInt8](capacity=end - start)
     for i in range(start, end):
-        result.append((data_ptr + i)[])
+        result.append(data_ptr[unsafe_offset=i])
     return String(unsafe_from_utf8=result^)
 
 
-def _find_scheme_sep(data_ptr: UnsafePointer[UInt8, _], data_len: Int) -> Int:
+def _find_scheme_sep(data_ptr: Pointer[UInt8, _], data_len: Int) -> Int:
     """Find '://' in the URL. Returns position of ':' or -1."""
     if data_len < 3:
         return -1
     for i in range(data_len - 2):
         if (
-            (data_ptr + i)[] == UInt8(ord(":"))
-            and (data_ptr + i + 1)[] == UInt8(ord("/"))
-            and (data_ptr + i + 2)[] == UInt8(ord("/"))
+            data_ptr[unsafe_offset=i] == UInt8(ord(":"))
+            and data_ptr[unsafe_offset=i + 1] == UInt8(ord("/"))
+            and data_ptr[unsafe_offset=i + 2] == UInt8(ord("/"))
         ):
             return i
     return -1
 
 
 def _find_char(
-    data_ptr: UnsafePointer[UInt8, _], data_len: Int, c: UInt8, start: Int = 0
+    data_ptr: Pointer[UInt8, _], data_len: Int, c: UInt8, start: Int = 0
 ) -> Int:
     """Find first occurrence of byte c in pointer data starting at start."""
     for i in range(start, data_len):
-        if (data_ptr + i)[] == c:
+        if data_ptr[unsafe_offset=i] == c:
             return i
     return -1
 
 
 def _parse_port(
-    data_ptr: UnsafePointer[UInt8, _], start: Int, end: Int
+    data_ptr: Pointer[UInt8, _], start: Int, end: Int
 ) raises -> Int:
     """Parse a port number from pointer range [start, end).
 
@@ -123,7 +123,7 @@ def _parse_port(
         raise Error("port number too long")
     var result: Int = 0
     for i in range(start, end):
-        var c = (data_ptr + i)[]
+        var c = data_ptr[unsafe_offset=i]
         if c < UInt8(ord("0")) or c > UInt8(ord("9")):
             raise Error(
                 "invalid digit in port: " + _ptr_to_string(data_ptr, start, end)
@@ -141,7 +141,7 @@ def _validate_host(host: String) raises:
     injection attacks or protocol confusion.
     """
     var bytes = host.as_bytes()
-    for i in range(len(host)):
+    for i in range(host.byte_length()):
         var b = bytes[i]
         if b == 0 or b == 13 or b == 10 or b == 32 or b == 47:
             # \0, \r, \n, space, /
@@ -151,7 +151,7 @@ def _validate_host(host: String) raises:
 def parse_url(raw_url: String) raises -> Url:
     """Parse a URL string into its components.
 
-    Uses UnsafePointer for zero-copy parsing — converts the URL to a
+    Uses Pointer for zero-copy parsing — converts the URL to a
     pointer once and uses pointer arithmetic throughout. Strings are
     only materialized when storing into Url struct fields.
 
@@ -169,8 +169,8 @@ def parse_url(raw_url: String) raises -> Url:
 
     # Convert to pointer once
     var raw_copy = raw_url
-    var ptr = raw_copy.as_c_string_slice().unsafe_ptr().bitcast[UInt8]()
-    var raw_len = len(raw_url)
+    var ptr = raw_copy.as_c_string_slice().unsafe_ptr().unsafe_bitcast[UInt8]()
+    var raw_len = raw_url.byte_length()
 
     # Step 1: Find "://" to extract scheme
     var scheme_end = _find_scheme_sep(ptr, raw_len)
@@ -217,7 +217,7 @@ def parse_url(raw_url: String) raises -> Url:
         else:
             url.port = 80
 
-    if len(url.host) == 0:
+    if url.host.byte_length() == 0:
         raise Error("invalid URL: empty host")
 
     # Validate host: no null bytes, CR, LF, or spaces
@@ -236,7 +236,7 @@ def parse_url(raw_url: String) raises -> Url:
         url.path = String("/")
 
     # Default empty path to "/"
-    if len(url.path) == 0:
+    if url.path.byte_length() == 0:
         url.path = String("/")
 
     return url^

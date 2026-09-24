@@ -42,13 +42,13 @@ struct HttpHeaders(Copyable, Movable, Sized):
         self._keys = List[String]()
         self._values = List[String]()
 
-    def __copyinit__(out self, copy: Self):
+    def __init__(out self, *, copy: Self):
         self._keys = copy._keys.copy()
         self._values = copy._values.copy()
 
-    def __moveinit__(out self, deinit take: Self):
-        self._keys = take._keys^
-        self._values = take._values^
+    def __init__(out self, *, deinit move: Self):
+        self._keys = move._keys^
+        self._values = move._values^
 
     def add(mut self, key: String, value: String):
         """Add a header key-value pair."""
@@ -96,7 +96,7 @@ struct HttpResponse(Copyable, Movable):
         self.url = String("")
         self.ok = False
 
-    def __copyinit__(out self, copy: Self):
+    def __init__(out self, *, copy: Self):
         self.status_code = copy.status_code
         self.status_text = copy.status_text
         self.headers = copy.headers.copy()
@@ -104,13 +104,13 @@ struct HttpResponse(Copyable, Movable):
         self.url = copy.url
         self.ok = copy.ok
 
-    def __moveinit__(out self, deinit take: Self):
-        self.status_code = take.status_code
-        self.status_text = take.status_text^
-        self.headers = take.headers^
-        self.body = take.body^
-        self.url = take.url^
-        self.ok = take.ok
+    def __init__(out self, *, deinit move: Self):
+        self.status_code = move.status_code
+        self.status_text = move.status_text^
+        self.headers = move.headers^
+        self.body = move.body^
+        self.url = move.url^
+        self.ok = move.ok
 
     def json(self) raises -> JsonValue:
         """Parse response body as JSON.
@@ -171,17 +171,17 @@ struct HttpClient(Movable):
         self._tls_sock = TlsSocket(0)
         self._tls_valid = False
 
-    def __moveinit__(out self, deinit take: Self):
-        self.user_agent = take.user_agent^
-        self.allow_private_ips = take.allow_private_ips
-        self._ca_bundle = take._ca_bundle^
-        self._ca_loaded = take._ca_loaded
-        self._http_key = take._http_key^
-        self._http_sock = take._http_sock^
-        self._http_valid = take._http_valid
-        self._tls_key = take._tls_key^
-        self._tls_sock = take._tls_sock^
-        self._tls_valid = take._tls_valid
+    def __init__(out self, *, deinit move: Self):
+        self.user_agent = move.user_agent^
+        self.allow_private_ips = move.allow_private_ips
+        self._ca_bundle = move._ca_bundle^
+        self._ca_loaded = move._ca_loaded
+        self._http_key = move._http_key^
+        self._http_sock = move._http_sock^
+        self._http_valid = move._http_valid
+        self._tls_key = move._tls_key^
+        self._tls_sock = move._tls_sock^
+        self._tls_valid = move._tls_valid
 
     # === GET ===
 
@@ -288,9 +288,9 @@ struct HttpClient(Movable):
         _append_str(req_buf, "Connection: keep-alive\r\n")
 
         # Add Content-Length and Content-Type for non-empty bodies
-        if len(body) > 0:
+        if body.byte_length() > 0:
             _append_str(req_buf, "Content-Length: ")
-            _append_str(req_buf, String(len(body)))
+            _append_str(req_buf, String(body.byte_length()))
             _append_str(req_buf, "\r\n")
             if not extra_headers.has("Content-Type"):
                 _append_str(req_buf, "Content-Type: application/json\r\n")
@@ -305,7 +305,7 @@ struct HttpClient(Movable):
         _append_str(req_buf, "\r\n")  # End of headers
 
         # Append body if present
-        if len(body) > 0:
+        if body.byte_length() > 0:
             _append_str(req_buf, body)
 
         # Step 3: Send request and receive response (TLS or plain TCP)
@@ -710,10 +710,10 @@ def _recv_http_keepalive(mut sock: TcpSocket) raises -> List[UInt8]:
 
 def _validate_method(method: String) raises:
     """Validate HTTP method contains only uppercase ASCII letters (A-Z)."""
-    if len(method) == 0:
+    if method.byte_length() == 0:
         raise Error("HTTP method must not be empty")
     var bytes = method.as_bytes()
-    for i in range(len(method)):
+    for i in range(method.byte_length()):
         var b = bytes[i]
         if b < UInt8(ord("A")) or b > UInt8(ord("Z")):
             raise Error("invalid HTTP method: must be uppercase ASCII letters")
@@ -722,7 +722,7 @@ def _validate_method(method: String) raises:
 def _validate_header_key(key: String) raises:
     """Validate header key contains no CR, LF, or colon characters."""
     var bytes = key.as_bytes()
-    for i in range(len(key)):
+    for i in range(key.byte_length()):
         var b = bytes[i]
         if b == 13 or b == 10 or b == 58:  # \r, \n, :
             raise Error("invalid header key: contains CR, LF, or colon")
@@ -731,7 +731,7 @@ def _validate_header_key(key: String) raises:
 def _validate_header_value(value: String) raises:
     """Validate header value contains no CR or LF characters."""
     var bytes = value.as_bytes()
-    for i in range(len(value)):
+    for i in range(value.byte_length()):
         var b = bytes[i]
         if b == 13 or b == 10:  # \r, \n
             raise Error("invalid header value: contains CR or LF")
@@ -740,7 +740,7 @@ def _validate_header_value(value: String) raises:
 def _validate_path(path: String) raises:
     """Validate request path contains no CR or LF characters."""
     var bytes = path.as_bytes()
-    for i in range(len(path)):
+    for i in range(path.byte_length()):
         var b = bytes[i]
         if b == 13 or b == 10:  # \r, \n
             raise Error("invalid request path: contains CR or LF")
@@ -766,11 +766,11 @@ def _to_lower(s: String) -> String:
 
 def _eq_ignore_case(a: String, b: String) -> Bool:
     """Case-insensitive string comparison. Zero allocations."""
-    if len(a) != len(b):
+    if a.byte_length() != b.byte_length():
         return False
     var a_bytes = a.as_bytes()
     var b_bytes = b.as_bytes()
-    for i in range(len(a)):
+    for i in range(a.byte_length()):
         var ca = a_bytes[i]
         var cb = b_bytes[i]
         if ca >= UInt8(ord("A")) and ca <= UInt8(ord("Z")):
@@ -785,12 +785,12 @@ def _eq_ignore_case(a: String, b: String) -> Bool:
 def _append_str(mut buf: List[UInt8], s: String):
     """Append all bytes of a string to a byte buffer."""
     var s_bytes = s.as_bytes()
-    for i in range(len(s)):
+    for i in range(s.byte_length()):
         buf.append(s_bytes[i])
 
 
 def _ptr_to_string(
-    data_ptr: UnsafePointer[UInt8, _], start: Int, end: Int
+    data_ptr: Pointer[UInt8, _], start: Int, end: Int
 ) -> String:
     """Materialize a String from a pointer byte range [start, end).
 
@@ -801,11 +801,11 @@ def _ptr_to_string(
         return String("")
     var result = List[UInt8](capacity=end - start)
     for i in range(start, end):
-        result.append((data_ptr + i)[])
+        result.append(data_ptr[unsafe_offset=i])
     return String(unsafe_from_utf8=result^)
 
 
-def _find_crlf_crlf(data_ptr: UnsafePointer[UInt8, _], data_len: Int) -> Int:
+def _find_crlf_crlf(data_ptr: Pointer[UInt8, _], data_len: Int) -> Int:
     """Find \\r\\n\\r\\n (header/body separator) in pointer data.
 
     Returns the index of the first \\r in the separator, or -1 if not found.
@@ -814,16 +814,16 @@ def _find_crlf_crlf(data_ptr: UnsafePointer[UInt8, _], data_len: Int) -> Int:
         return -1
     for i in range(data_len - 3):
         if (
-            (data_ptr + i)[] == 13
-            and (data_ptr + i + 1)[] == 10
-            and (data_ptr + i + 2)[] == 13
-            and (data_ptr + i + 3)[] == 10
+            data_ptr[unsafe_offset=i] == 13
+            and data_ptr[unsafe_offset=i + 1] == 10
+            and data_ptr[unsafe_offset=i + 2] == 13
+            and data_ptr[unsafe_offset=i + 3] == 10
         ):
             return i
     return -1
 
 
-def _find_crlf(data_ptr: UnsafePointer[UInt8, _], data_len: Int, start: Int) -> Int:
+def _find_crlf(data_ptr: Pointer[UInt8, _], data_len: Int, start: Int) -> Int:
     """Find \\r\\n starting from start in pointer data.
 
     Returns the index of \\r, or -1 if not found.
@@ -831,26 +831,26 @@ def _find_crlf(data_ptr: UnsafePointer[UInt8, _], data_len: Int, start: Int) -> 
     if data_len < 2:
         return -1
     for i in range(start, data_len - 1):
-        if (data_ptr + i)[] == 13 and (data_ptr + i + 1)[] == 10:
+        if data_ptr[unsafe_offset=i] == 13 and data_ptr[unsafe_offset=i + 1] == 10:
             return i
     return -1
 
 
 def _find_char(
-    data_ptr: UnsafePointer[UInt8, _],
+    data_ptr: Pointer[UInt8, _],
     data_len: Int,
     c: UInt8,
     start: Int = 0,
 ) -> Int:
     """Find first occurrence of byte c in pointer data starting at start."""
     for i in range(start, data_len):
-        if (data_ptr + i)[] == c:
+        if data_ptr[unsafe_offset=i] == c:
             return i
     return -1
 
 
 def _hex_to_int(
-    data_ptr: UnsafePointer[UInt8, _], start: Int, end: Int
+    data_ptr: Pointer[UInt8, _], start: Int, end: Int
 ) raises -> Int:
     """Parse a hex string from pointer range [start, end) to integer.
 
@@ -863,7 +863,7 @@ def _hex_to_int(
     for i in range(start, end):
         if result > MAX_CHUNK:
             raise Error("chunk size too large (exceeds 256 MB)")
-        var c = (data_ptr + i)[]
+        var c = data_ptr[unsafe_offset=i]
         result = result * 16
         if c >= UInt8(ord("0")) and c <= UInt8(ord("9")):
             result += Int(c - UInt8(ord("0")))
@@ -884,13 +884,13 @@ def _decode_chunked(body: String) raises -> String:
 
     Format: <hex-size>\\r\\n<data>\\r\\n ... 0\\r\\n\\r\\n
 
-    Uses UnsafePointer for zero-copy parsing — only materializes the
+    Uses Pointer for zero-copy parsing — only materializes the
     final decoded body string.
     """
-    var result = List[UInt8](capacity=len(body))
+    var result = List[UInt8](capacity=body.byte_length())
     var body_copy = body
-    var ptr = body_copy.as_c_string_slice().unsafe_ptr().bitcast[UInt8]()
-    var body_len = len(body)
+    var ptr = body_copy.as_c_string_slice().unsafe_ptr().unsafe_bitcast[UInt8]()
+    var body_len = body.byte_length()
     var pos = 0
     while pos < body_len:
         # Find end of chunk size line
@@ -917,7 +917,7 @@ def _decode_chunked(body: String) raises -> String:
                 + " available"
             )
         for i in range(chunk_size):
-            result.append((ptr + data_start + i)[])
+            result.append(ptr[unsafe_offset=data_start + i])
         pos = data_start + chunk_size + 2  # skip data + trailing \r\n
     return String(unsafe_from_utf8=result^)
 
@@ -925,7 +925,7 @@ def _decode_chunked(body: String) raises -> String:
 def _parse_response(raw: String, url: String) raises -> HttpResponse:
     """Parse a raw HTTP response string into an HttpResponse.
 
-    Uses UnsafePointer for zero-copy parsing — converts the raw response
+    Uses Pointer for zero-copy parsing — converts the raw response
     to a pointer once and uses pointer arithmetic throughout. Strings are
     only materialized when storing into response fields.
 
@@ -941,8 +941,8 @@ def _parse_response(raw: String, url: String) raises -> HttpResponse:
 
     # Convert to pointer once — all parsing uses pointer arithmetic
     var raw_copy = raw
-    var ptr = raw_copy.as_c_string_slice().unsafe_ptr().bitcast[UInt8]()
-    var raw_len = len(raw)
+    var ptr = raw_copy.as_c_string_slice().unsafe_ptr().unsafe_bitcast[UInt8]()
+    var raw_len = raw.byte_length()
 
     # Find header/body separator (\r\n\r\n)
     var separator = _find_crlf_crlf(ptr, raw_len)
@@ -958,11 +958,11 @@ def _parse_response(raw: String, url: String) raises -> HttpResponse:
     var status_end = first_crlf if first_crlf >= 0 else separator
 
     # Validate HTTP version prefix
-    if status_end < 5 or (ptr + 0)[] != UInt8(ord("H")) or (ptr + 1)[] != UInt8(ord(
+    if status_end < 5 or ptr[unsafe_offset=0] != UInt8(ord("H")) or ptr[unsafe_offset=1] != UInt8(ord(
         "T"
-    )) or (ptr + 2)[] != UInt8(ord("T")) or (ptr + 3)[] != UInt8(ord("P")) or (
-        ptr + 4
-    )[] != UInt8(ord("/")):
+    )) or ptr[unsafe_offset=2] != UInt8(ord("T")) or ptr[unsafe_offset=3] != UInt8(ord("P")) or (
+        ptr[unsafe_offset=4]
+    ) != UInt8(ord("/")):
         raise Error(
             "response is not HTTP: " + _ptr_to_string(ptr, 0, status_end)
         )
@@ -1007,7 +1007,7 @@ def _parse_response(raw: String, url: String) raises -> HttpResponse:
                 var key = _ptr_to_string(ptr, pos, colon)
                 var value_start = colon + 1
                 # Skip leading spaces
-                while value_start < line_end and (ptr + value_start)[] == UInt8(ord(
+                while value_start < line_end and ptr[unsafe_offset=value_start] == UInt8(ord(
                     " "
                 )):
                     value_start += 1
@@ -1027,7 +1027,7 @@ def _parse_response(raw: String, url: String) raises -> HttpResponse:
 
 
 def _parse_status_code(
-    data_ptr: UnsafePointer[UInt8, _], start: Int, end: Int
+    data_ptr: Pointer[UInt8, _], start: Int, end: Int
 ) raises -> Int:
     """Parse HTTP status code from pointer range [start, end).
 
@@ -1037,7 +1037,7 @@ def _parse_status_code(
         raise Error("status code too long (max 3 digits)")
     var result: Int = 0
     for i in range(start, end):
-        var c = (data_ptr + i)[]
+        var c = data_ptr[unsafe_offset=i]
         if c < UInt8(ord("0")) or c > UInt8(ord("9")):
             raise Error(
                 "invalid status code: " + _ptr_to_string(data_ptr, start, end)

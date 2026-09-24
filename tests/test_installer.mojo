@@ -46,7 +46,7 @@ def test_bytes_to_hex() raises:
 def test_sha256_hex_empty() raises:
     # SHA-256("") = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
     var h = sha256_hex("")
-    assert_int_eq(len(h), 64, "sha256 of empty: length 64")
+    assert_int_eq(h.byte_length(), 64, "sha256 of empty: length 64")
     assert_eq(h, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
               "sha256('') known value")
     print("PASS: test_sha256_hex_empty")
@@ -56,7 +56,7 @@ def test_sha256_hex_abc() raises:
     # SHA-256("abc") as produced by this project's crypto.hash implementation
     # (value verified against tls_pure hash tests which use this same SHA-256 impl)
     var h = sha256_hex("abc")
-    assert_int_eq(len(h), 64, "sha256 of 'abc': length 64")
+    assert_int_eq(h.byte_length(), 64, "sha256 of 'abc': length 64")
     assert_eq(h, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
               "sha256('abc') known value")
     print("PASS: test_sha256_hex_abc")

@@ -6,8 +6,8 @@
 # All FFI functions that need C strings use alloc+copy+null-terminate explicitly.
 
 from std.ffi import external_call
-from std.memory.unsafe_pointer import alloc
-from os import getenv
+from std.memory import alloc
+from std.os import getenv
 
 
 # ─── Platform detection ────────────────────────────────────────────────────────
@@ -18,10 +18,10 @@ def fs_exists(path: String) -> Bool:
     var n = len(pb)
     var buf = alloc[UInt8](n + 1)
     for i in range(n):
-        (buf + i)[] = pb[i]
-    (buf + n)[] = 0
+        buf[unsafe_offset=i] = pb[i]
+    buf[unsafe_offset=n] = 0
     var ret = external_call["access", Int32](buf, Int32(0))
-    buf.free()
+    buf.unsafe_free()
     return ret == 0
 
 
@@ -110,10 +110,10 @@ def fs_read_file(path: String) raises -> String:
     var pn = len(pb)
     var pbuf = alloc[UInt8](pn + 1)
     for i in range(pn):
-        (pbuf + i)[] = pb[i]
-    (pbuf + pn)[] = 0
+        pbuf[unsafe_offset=i] = pb[i]
+    pbuf[unsafe_offset=pn] = 0
     var fd = external_call["open", Int32](pbuf, Int32(0))  # O_RDONLY=0
-    pbuf.free()
+    pbuf.unsafe_free()
     if fd < 0:
         raise Error("Cannot open file: " + path)
 
@@ -129,13 +129,13 @@ def fs_read_file(path: String) raises -> String:
     _ = external_call["close", Int32](fd)
 
     if n <= 0:
-        rbuf.free()
+        rbuf.unsafe_free()
         return String("")
 
     var out = List[UInt8](capacity=n)
     for i in range(n):
-        out.append((rbuf + i)[])
-    rbuf.free()
+        out.append(rbuf[unsafe_offset=i])
+    rbuf.unsafe_free()
     return String(unsafe_from_utf8=out^)
 
 
@@ -145,10 +145,10 @@ def fs_write_file(path: String, content: String) raises:
     var pn = len(pb)
     var pbuf = alloc[UInt8](pn + 1)
     for i in range(pn):
-        (pbuf + i)[] = pb[i]
-    (pbuf + pn)[] = 0
+        pbuf[unsafe_offset=i] = pb[i]
+    pbuf[unsafe_offset=pn] = 0
     var fd = external_call["creat", Int32](pbuf, Int32(420))  # mode 0644
-    pbuf.free()
+    pbuf.unsafe_free()
     if fd < 0:
         raise Error("Cannot write file: " + path)
 
@@ -157,9 +157,9 @@ def fs_write_file(path: String, content: String) raises:
     if n > 0:
         var wbuf = alloc[UInt8](n)
         for i in range(n):
-            (wbuf + i)[] = bytes[i]
+            wbuf[unsafe_offset=i] = bytes[i]
         _ = external_call["write", Int](Int(fd), wbuf, n)
-        wbuf.free()
+        wbuf.unsafe_free()
     _ = external_call["close", Int32](fd)
 
 
@@ -169,10 +169,10 @@ def fs_write_bytes(path: String, data: List[UInt8]) raises:
     var pn = len(pb)
     var pbuf = alloc[UInt8](pn + 1)
     for i in range(pn):
-        (pbuf + i)[] = pb[i]
-    (pbuf + pn)[] = 0
+        pbuf[unsafe_offset=i] = pb[i]
+    pbuf[unsafe_offset=pn] = 0
     var fd = external_call["creat", Int32](pbuf, Int32(420))  # mode 0644
-    pbuf.free()
+    pbuf.unsafe_free()
     if fd < 0:
         raise Error("Cannot write file: " + path)
 
@@ -180,9 +180,9 @@ def fs_write_bytes(path: String, data: List[UInt8]) raises:
     if n > 0:
         var wbuf = alloc[UInt8](n)
         for i in range(n):
-            (wbuf + i)[] = data[i]
+            wbuf[unsafe_offset=i] = data[i]
         _ = external_call["write", Int](Int(fd), wbuf, n)
-        wbuf.free()
+        wbuf.unsafe_free()
     _ = external_call["close", Int32](fd)
 
 
@@ -194,10 +194,10 @@ def fs_run(cmd: String) raises -> Int32:
     var n = len(cb)
     var buf = alloc[UInt8](n + 1)
     for i in range(n):
-        (buf + i)[] = cb[i]
-    (buf + n)[] = 0
+        buf[unsafe_offset=i] = cb[i]
+    buf[unsafe_offset=n] = 0
     var ret = external_call["system", Int32](buf)
-    buf.free()
+    buf.unsafe_free()
     return ret
 
 
@@ -221,14 +221,14 @@ def fs_run_output(cmd: String) raises -> String:
     var cn = len(cb)
     var cbuf = alloc[UInt8](cn + 1)
     for i in range(cn):
-        (cbuf + i)[] = cb[i]
-    (cbuf + cn)[] = 0
+        cbuf[unsafe_offset=i] = cb[i]
+    cbuf[unsafe_offset=cn] = 0
     var mode = alloc[UInt8](2)
     mode[] = 114  # 'r'
-    (mode + 1)[] = 0
+    mode[unsafe_offset=1] = 0
     var fp = external_call["popen", Int](cbuf, mode)
-    cbuf.free()
-    mode.free()
+    cbuf.unsafe_free()
+    mode.unsafe_free()
     if fp == 0:
         return String("")
     var out = List[UInt8]()
@@ -238,8 +238,8 @@ def fs_run_output(cmd: String) raises -> String:
         if nr <= 0:
             break
         for i in range(nr):
-            out.append((rbuf + i)[])
-    rbuf.free()
+            out.append(rbuf[unsafe_offset=i])
+    rbuf.unsafe_free()
     _ = external_call["pclose", Int32](fp)
     var end = len(out)
     while end > 0 and (out[end - 1] == UInt8(10) or out[end - 1] == UInt8(13)):
