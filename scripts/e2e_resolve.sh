@@ -19,7 +19,14 @@ resolve() {  # resolve <case-dir> <deps toml lines...>; prints "name version" li
         printf '[package]\nname = "e2e"\nversion = "0.1.0"\n\n[dependencies]\n'
         printf '%s\n' "$@"
     } > "$dir/mojoproject.toml"
-    (cd "$dir" && "$BIN" update --dry-run 2>&1) | sed -n 's/^ *Resolved: \(.*\)$/\1/p'
+    local status=0
+    (cd "$dir" && "$BIN" update --dry-run) > "$dir/output.txt" 2>&1 || status=$?
+    if [ "$status" -ne 0 ]; then
+        # Show why (stderr of this function is not captured by $(...))
+        echo "mojo-pkg exited with status $status in case '$(basename "$dir")':" >&2
+        sed 's/^/    /' "$dir/output.txt" >&2
+    fi
+    sed -n 's/^ *Resolved: \(.*\)$/\1/p' "$dir/output.txt"
 }
 
 check() {  # check <case> <output> <package> <python condition on version tuple v>
