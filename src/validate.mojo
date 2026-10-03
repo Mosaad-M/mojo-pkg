@@ -68,6 +68,60 @@ def validate_version(version: String) raises:
             raise Error("Invalid version: '" + version + "' (consecutive dots)")
 
 
+def trim_spaces(s: String) -> String:
+    """Strip leading and trailing ASCII spaces and tabs."""
+    var bytes = s.as_bytes()
+    var start = 0
+    var end = len(bytes)
+    while start < end and (bytes[start] == 32 or bytes[start] == 9):
+        start += 1
+    while end > start and (bytes[end - 1] == 32 or bytes[end - 1] == 9):
+        end -= 1
+    var out = List[UInt8](capacity=end - start)
+    for i in range(start, end):
+        out.append(bytes[i])
+    return String(unsafe_from_utf8=out^)
+
+
+def split_comparator(comparator: String) -> Tuple[String, String]:
+    """Split one comparator ('>=1.2.3') into (operator, version). The
+    operator is one of >=, <=, >, <, =, ^ or '' if absent."""
+    var bytes = comparator.as_bytes()
+    var n = 0
+    if len(bytes) >= 2 and (bytes[0] == 62 or bytes[0] == 60) and bytes[1] == 61:
+        n = 2  # >= or <=
+    elif len(bytes) >= 1 and (
+        bytes[0] == 62 or bytes[0] == 60 or bytes[0] == 61 or bytes[0] == 94
+    ):
+        n = 1  # > < = ^
+    var op = List[UInt8](capacity=n)
+    var ver = List[UInt8](capacity=len(bytes) - n)
+    for i in range(len(bytes)):
+        if i < n:
+            op.append(bytes[i])
+        else:
+            ver.append(bytes[i])
+    return (String(unsafe_from_utf8=op^), String(unsafe_from_utf8=ver^))
+
+
+def validate_constraint(constraint: String) raises:
+    """Reject dependency constraints from the registry that are not one or
+    more comparators joined by commas, each an explicit operator
+    (>=, <=, >, <, =, ^) followed by X.Y.Z, e.g. '>=1.0.0,<2.0.0'."""
+    if constraint.byte_length() == 0 or constraint.byte_length() > 128:
+        raise Error("Invalid constraint: '" + constraint + "' (must be 1-128 chars)")
+    for part in constraint.split(","):
+        var comparator = trim_spaces(String(part))
+        var split = split_comparator(comparator)
+        if split[0].byte_length() == 0:
+            raise Error(
+                "Invalid constraint: '"
+                + constraint
+                + "' (each comparator needs an operator: >=, <=, >, <, =, ^)"
+            )
+        validate_version(split[1])
+
+
 def validate_tarball_url(url: String) raises:
     """Reject tarball URLs that don't start with https://github.com/ and contain
     any character outside the strict allowlist A-Za-z0-9/-_.:%=?&#@."""

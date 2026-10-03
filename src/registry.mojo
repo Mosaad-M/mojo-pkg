@@ -5,7 +5,7 @@
 from std.collections import Dict
 from json import JsonValue, parse_json
 from http_client import HttpClient, HttpResponse
-from validate import validate_name, validate_tarball_url
+from validate import validate_constraint, validate_name, validate_tarball_url
 
 comptime INDEX_BASE = "https://raw.githubusercontent.com/Mosaad-M/mojo-pkg-index/main"
 
@@ -17,6 +17,9 @@ struct PackageVersion(Copyable, Movable):
     var sha256: String
     var mojo_requires: String
     var deps: List[String]
+    # Version constraint for each entry of deps ("" = any version), from the
+    # registry's optional "dep_constraints" object.
+    var dep_constraints: List[String]
 
     def __init__(out self, version: String, tarball_url: String, sha256: String, mojo_requires: String):
         self.version = version
@@ -24,6 +27,7 @@ struct PackageVersion(Copyable, Movable):
         self.sha256 = sha256
         self.mojo_requires = mojo_requires
         self.deps = List[String]()
+        self.dep_constraints = List[String]()
 
     def __init__(out self, *, copy: Self):
         self.version = copy.version
@@ -31,6 +35,7 @@ struct PackageVersion(Copyable, Movable):
         self.sha256 = copy.sha256
         self.mojo_requires = copy.mojo_requires
         self.deps = copy.deps.copy()
+        self.dep_constraints = copy.dep_constraints.copy()
 
     def __init__(out self, *, deinit move: Self):
         self.version = move.version^
@@ -38,6 +43,11 @@ struct PackageVersion(Copyable, Movable):
         self.sha256 = move.sha256^
         self.mojo_requires = move.mojo_requires^
         self.deps = move.deps^
+        self.dep_constraints = move.dep_constraints^
+
+    def add_dep(mut self, name: String, constraint: String = ""):
+        self.deps.append(name)
+        self.dep_constraints.append(constraint)
 
 
 struct PackageMeta(Copyable, Movable):
@@ -62,7 +72,7 @@ struct PackageMeta(Copyable, Movable):
         self.versions = move.versions^
 
 
-def _parse_package_json(root: JsonValue) raises -> PackageMeta:
+def parse_package_json(root: JsonValue) raises -> PackageMeta:
     """Parse a single package JSON object into PackageMeta."""
     var meta = PackageMeta(
         root.get_string("name"),
@@ -88,7 +98,38 @@ def _parse_package_json(root: JsonValue) raises -> PackageMeta:
             for j in range(nd):
                 var dname = deps_arr.get_string(j)
                 validate_name(dname)
-                pv.deps.append(dname)
+                pv.add_dep(dname)
+        # Optional per-dep version constraints: {"json": ">=3.0.1"}
+        if v.has_key("dep_constraints"):
+            var dc = v.get("dep_constraints")
+            if not dc.is_object():
+                raise Error(
+                    "Registry: dep_constraints of "
+                    + meta.name
+                    + " "
+                    + pv.version
+                    + " must be an object"
+                )
+            var keys = dc.keys()
+            for k in range(len(keys)):
+                var dep = keys[k]
+                var idx = -1
+                for j in range(len(pv.deps)):
+                    if pv.deps[j] == dep:
+                        idx = j
+                if idx < 0:
+                    raise Error(
+                        "Registry: dep_constraints key '"
+                        + dep
+                        + "' of "
+                        + meta.name
+                        + " "
+                        + pv.version
+                        + " is not in deps"
+                    )
+                var constraint = dc.get_string(dep)
+                validate_constraint(constraint)
+                pv.dep_constraints[idx] = constraint
         meta.versions.append(pv^)
 
     return meta^
@@ -103,7 +144,7 @@ def registry_fetch_package(name: String, mut client: HttpClient) raises -> Packa
         raise Error("Package not found in registry: " + name + " (HTTP " + String(resp.status_code) + ")")
 
     var root = parse_json(resp.body)
-    return _parse_package_json(root)
+    return parse_package_json(root)
 
 
 def registry_fetch_all(mut client: HttpClient) raises -> Dict[String, PackageMeta]:
@@ -120,7 +161,7 @@ def registry_fetch_all(mut client: HttpClient) raises -> Dict[String, PackageMet
     var result = Dict[String, PackageMeta]()
     for i in range(n):
         var pkg_json = pkgs_arr.get(i)
-        var meta = _parse_package_json(pkg_json)
+        var meta = parse_package_json(pkg_json)
         validate_name(meta.name)
         result[meta.name] = meta^
     return result^
