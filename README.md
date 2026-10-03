@@ -74,6 +74,27 @@ mojo-pkg search tls
 mojo-pkg list
 ```
 
+## Version constraints and resolution
+
+Constraints in `mojoproject.toml` are one or more comparators joined by commas, all of
+which must hold: `>=1.2.0`, `>1.2.0`, `<=1.2.0`, `<2.0.0`, `=1.2.0`, `^1.2.0`, or a
+range such as `>=1.0.0,<2.0.0`.
+
+```toml
+[dependencies]
+requests = { git = "Mosaad-M/requests", version = ">=1.0.0" }
+json     = { git = "Mosaad-M/json",     version = ">=1.0.0,<2.0.0" }
+```
+
+`install` (without a `mojo.lock`), `update`, `add` and `remove` resolve the whole
+dependency graph. Packages declare which versions of their own dependencies they work
+with in the registry (`dep_constraints`), and the resolver picks the newest versions
+that satisfy every constraint, falling back to older versions when needed. For
+example, pinning `json = "=1.1.0"` alongside `requests = ">=1.0.0"` selects the newest
+requests release that still works with json 1.x. If no combination exists, the error
+lists the conflicting constraints and where each came from. An existing `mojo.lock` is
+installed as-is.
+
 ## Running Tests
 
 ```bash
@@ -91,7 +112,11 @@ pixi run test-lockfile
 pixi run test-flags
 pixi run test-json
 pixi run test-url
+pixi run test-resolver
 ```
+
+`scripts/e2e_resolve.sh <mojo-pkg binary>` resolves sample projects against the live
+registry (run in CI after building the binary).
 
 ## Project Structure
 

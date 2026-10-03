@@ -67,6 +67,9 @@ jobs:
           ~/.mojo/bin/mojo-pkg help 2>&1 | grep -q "install"
           echo "PASS: binary smoke tests"
 
+      - name: E2E resolve against the live index
+        run: bash scripts/e2e_resolve.sh ~/.mojo/bin/mojo-pkg
+
       - name: Package binary
         run: tar czf mojo-pkg-linux-64.tar.gz -C "$HOME/.mojo/bin" mojo-pkg-bin mojo-pkg
 
@@ -104,6 +107,9 @@ jobs:
           ~/.mojo/bin/mojo-pkg version | grep -q "mojo-pkg"
           ~/.mojo/bin/mojo-pkg help 2>&1 | grep -q "install"
           echo "PASS: binary smoke tests"
+
+      - name: E2E resolve against the live index
+        run: bash scripts/e2e_resolve.sh ~/.mojo/bin/mojo-pkg
 
       - name: Package binary
         run: tar czf mojo-pkg-osx-arm64.tar.gz -C "$HOME/.mojo/bin" mojo-pkg-bin mojo-pkg

@@ -3,6 +3,7 @@
 # Replaces test_resolver.mojo (which is retired).
 
 from resolver import semver_parse, semver_satisfies, SemVer
+from validate import validate_constraint
 
 
 def assert_true(val: Bool, label: String) raises:
@@ -182,6 +183,48 @@ def test_empty_constraint() raises:
     print("PASS: test_empty_constraint")
 
 
+# ─── compound constraints (comma = AND) ───────────────────────────────────────
+
+def test_compound_constraint() raises:
+    assert_true(semver_satisfies("1.5.0", ">=1.0.0,<2.0.0"), "inside range")
+    assert_true(semver_satisfies("1.0.0", ">=1.0.0,<2.0.0"), "lower bound inclusive")
+    assert_false(semver_satisfies("2.0.0", ">=1.0.0,<2.0.0"), "upper bound exclusive")
+    assert_false(semver_satisfies("0.9.9", ">=1.0.0,<2.0.0"), "below range")
+    assert_true(semver_satisfies("1.5.0", " >=1.0.0 , <2.0.0 "), "spaces trimmed")
+    assert_true(semver_satisfies("1.2.0", "^1.0.0,>=1.2.0"), "caret combined")
+    assert_false(semver_satisfies("1.1.0", "^1.0.0,>=1.2.0"), "caret combined, too low")
+    assert_false(semver_satisfies("1.0.0", ">=2.0.0,<1.0.0"), "empty range")
+    var raised = False
+    try:
+        _ = semver_satisfies("1.0.0", ">=1.0.0,")
+    except:
+        raised = True
+    assert_true(raised, "trailing comma raises")
+    print("PASS: test_compound_constraint")
+
+
+def test_validate_constraint() raises:
+    validate_constraint(">=3.0.1")
+    validate_constraint(">=1.0.0,<2.0.0")
+    validate_constraint("^1.2.3")
+    validate_constraint(" =1.0.0 ")
+    var bad = List[String]()
+    bad.append("")             # empty
+    bad.append("1.0.0")        # no operator
+    bad.append(">=1.0")        # not X.Y.Z
+    bad.append(">=1.0.0,")     # empty comparator
+    bad.append("~1.0.0")       # unknown operator
+    bad.append(">=1.0.0;rm")   # junk
+    for i in range(len(bad)):
+        var raised = False
+        try:
+            validate_constraint(bad[i])
+        except:
+            raised = True
+        assert_true(raised, "rejects '" + bad[i] + "'")
+    print("PASS: test_validate_constraint")
+
+
 def main() raises:
     print("=== SemVer Tests ===")
     test_parse_basic()
@@ -201,5 +244,7 @@ def main() raises:
     test_eq_constraint()
     test_caret_constraint()
     test_empty_constraint()
+    test_compound_constraint()
+    test_validate_constraint()
     print("")
     print("All semver tests passed!")
