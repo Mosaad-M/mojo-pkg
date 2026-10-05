@@ -2,7 +2,7 @@
 channels = ["https://conda.modular.com/max", "conda-forge"]
 name = "mojo-pkg"
 platforms = ["linux-64", "osx-arm64"]
-version = "0.7.2"
+version = "0.7.3"
 
 [dependencies]
 mojo = ">=1.0.0"
@@ -27,7 +27,9 @@ test-update   = "mojo run -I src -I $TLS_PURE tests/test_update.mojo"
 test-remove   = "mojo run -I src -I $TLS_PURE tests/test_remove.mojo"
 test-tcp      = "mojo run -I src -I $TLS_PURE tests/test_tcp.mojo"
 test-resolver = "mojo run -I src -I $TLS_PURE tests/test_resolver.mojo"
+test-registry-index = "mojo run -I src -I $TLS_PURE tests/test_registry_index.mojo"
+test-index-live = "mojo run -I src -I tests -I $TLS_PURE tests/test_registry_index_live.mojo"
 
-test = { depends-on = ["test-toml", "test-manifest", "test-semver", "test-validate", "test-lockfile", "test-flags", "test-json", "test-url", "test-installer", "test-update", "test-remove", "test-tcp", "test-resolver"] }
+test = { depends-on = ["test-toml", "test-manifest", "test-semver", "test-validate", "test-lockfile", "test-flags", "test-json", "test-url", "test-installer", "test-update", "test-remove", "test-tcp", "test-resolver", "test-registry-index"] }
 
 test-build = "bash -c 'bash build_and_run.sh && ~/.mojo/bin/mojo-pkg version | grep -q mojo-pkg && echo PASS: binary smoke test'"

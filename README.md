@@ -19,6 +19,14 @@ curl -fsSL https://raw.githubusercontent.com/Mosaad-M/mojo-pkg/main/scripts/inst
 
 The script auto-detects your platform and downloads the correct binary.
 
+Some networks block `raw.githubusercontent.com`. If the command above fails with a TLS
+or connection error, fetch the same script through the GitHub API:
+
+```bash
+curl -fsSL -H "Accept: application/vnd.github.raw" \
+  https://api.github.com/repos/Mosaad-M/mojo-pkg/contents/scripts/install.sh | bash
+```
+
 ### Manual
 
 Download from [GitHub Releases](https://github.com/Mosaad-M/mojo-pkg/releases/latest), extract, and add `~/.mojo/bin` to your PATH.
@@ -94,6 +102,11 @@ example, pinning `json = "=1.1.0"` alongside `requests = ">=1.0.0"` selects the 
 requests release that still works with json 1.x. If no combination exists, the error
 lists the conflicting constraints and where each came from. An existing `mojo.lock` is
 installed as-is.
+
+The registry is read from `raw.githubusercontent.com`. If that host is unreachable
+(some networks filter it), mojo-pkg fetches the same index files from GitHub's contents
+API instead, with no configuration. Unauthenticated API requests are limited to 60 per
+hour; set `GITHUB_TOKEN` to raise the limit.
 
 ## Running Tests
 

@@ -1,13 +1,77 @@
 # src/registry.mojo
 # Fetch package metadata from the GitHub-backed mojo-pkg-index.
 # Index lives at: https://raw.githubusercontent.com/Mosaad-M/mojo-pkg-index/main/
+# When raw.githubusercontent.com is unreachable (some networks filter it),
+# the same files are fetched through the GitHub contents API instead.
 
 from std.collections import Dict
+from std.os import getenv
 from json import JsonValue, parse_json
-from http_client import HttpClient, HttpResponse
+from http_client import HttpClient, HttpHeaders, HttpResponse
 from validate import validate_constraint, validate_name, validate_tarball_url
 
 comptime INDEX_BASE = "https://raw.githubusercontent.com/Mosaad-M/mojo-pkg-index/main"
+comptime INDEX_API_BASE = "https://api.github.com/repos/Mosaad-M/mojo-pkg-index/contents"
+comptime INDEX_REF = "main"
+
+
+def index_api_url(path: String) -> String:
+    """GitHub contents-API URL for an index file (path like "packages/x.json")."""
+    return INDEX_API_BASE + "/" + path + "?ref=" + INDEX_REF
+
+
+def _primary_is_answer(status: Int) -> Bool:
+    """True when raw.githubusercontent.com's reply is final (no fallback).
+
+    Over verified TLS, a 2xx/3xx/4xx is GitHub's real answer (a 404 means
+    the package does not exist). Rate limiting and server errors are worth
+    retrying through the API.
+    """
+    return status < 500 and status != 429
+
+
+def index_get_from(
+    primary_base: String, path: String, mut client: HttpClient
+) raises -> HttpResponse:
+    """GET an index file from primary_base, falling back to the GitHub API.
+
+    The fallback is GitHub itself (same repository, same TLS validation),
+    so it adds no new party that could alter the index's tarball hashes.
+    """
+    var primary_err: String
+    try:
+        var resp = client.get(primary_base + "/" + path)
+        if _primary_is_answer(resp.status_code):
+            return resp^
+        primary_err = "HTTP " + String(resp.status_code)
+    except e:
+        primary_err = String(e)
+
+    var headers = HttpHeaders()
+    headers.add("Accept", "application/vnd.github.raw")
+    var token = getenv("GITHUB_TOKEN", "")
+    if token.byte_length() > 0:
+        headers.add("Authorization", "Bearer " + token)
+    var resp: HttpResponse
+    try:
+        resp = client.get(index_api_url(path), headers)
+    except e:
+        raise Error(
+            "could not reach the package index: " + primary_base + " failed ("
+            + primary_err + "), api.github.com failed (" + String(e) + ")"
+        )
+    if resp.status_code == 403 or resp.status_code == 429:
+        raise Error(
+            "could not reach the package index: " + primary_base + " failed ("
+            + primary_err + "), and the GitHub API rate limit was hit (HTTP "
+            + String(resp.status_code) + "; set GITHUB_TOKEN to raise it)"
+        )
+    return resp^
+
+
+def index_get(path: String, mut client: HttpClient) raises -> HttpResponse:
+    """GET an index file (e.g. "packages/all.json") with the API fallback."""
+    return index_get_from(INDEX_BASE, path, client)
 
 
 struct PackageVersion(Copyable, Movable):
@@ -138,8 +202,7 @@ def parse_package_json(root: JsonValue) raises -> PackageMeta:
 def registry_fetch_package(name: String, mut client: HttpClient) raises -> PackageMeta:
     """Fetch package metadata from the index."""
     validate_name(name)
-    var url = INDEX_BASE + "/packages/" + name + ".json"
-    var resp = client.get(url)
+    var resp = index_get("packages/" + name + ".json", client)
     if resp.status_code != 200:
         raise Error("Package not found in registry: " + name + " (HTTP " + String(resp.status_code) + ")")
 
@@ -150,8 +213,7 @@ def registry_fetch_package(name: String, mut client: HttpClient) raises -> Packa
 def registry_fetch_all(mut client: HttpClient) raises -> Dict[String, PackageMeta]:
     """Fetch the combined all.json manifest in a single HTTP request.
     Returns a Dict mapping package name -> PackageMeta."""
-    var url = INDEX_BASE + "/packages/all.json"
-    var resp = client.get(url)
+    var resp = index_get("packages/all.json", client)
     if resp.status_code != 200:
         raise Error("Could not fetch all.json (HTTP " + String(resp.status_code) + ")")
 
@@ -169,8 +231,7 @@ def registry_fetch_all(mut client: HttpClient) raises -> Dict[String, PackageMet
 
 def registry_search(query: String, mut client: HttpClient) raises -> List[String]:
     """Search for packages in the index. Returns list of matching names."""
-    var url = INDEX_BASE + "/index.json"
-    var resp = client.get(url)
+    var resp = index_get("index.json", client)
     if resp.status_code != 200:
         raise Error("Could not fetch package index (HTTP " + String(resp.status_code) + ")")
 
