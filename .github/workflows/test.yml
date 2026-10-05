@@ -51,6 +51,11 @@ jobs:
       - name: E2E resolve against the live index
         run: bash scripts/e2e_resolve.sh ~/.mojo/bin/mojo-pkg
 
+      - name: Index fetch via the GitHub API fallback (live)
+        run: pixi run test-index-live
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
   test-macos:
     runs-on: macos-14
     permissions:
@@ -95,3 +100,8 @@ jobs:
 
       - name: E2E resolve against the live index
         run: bash scripts/e2e_resolve.sh ~/.mojo/bin/mojo-pkg
+
+      - name: Index fetch via the GitHub API fallback (live)
+        run: pixi run test-index-live
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
