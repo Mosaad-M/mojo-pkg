@@ -4,7 +4,7 @@
 from http_client import HttpClient
 from lockfile import LockedPackage
 from manifest import Manifest, CDependency, manifest_parse
-from fs import fs_exists, fs_mkdir_p, fs_write_bytes, fs_read_file, fs_run, fs_run_check, shared_lib_ext, gcc_shared_flag, c_compiler, fs_home_dir, _shell_quote
+from fs import fs_exists, fs_mkdir_p, fs_write_bytes, fs_read_bytes, fs_run, fs_run_check, shared_lib_ext, gcc_shared_flag, c_compiler, fs_home_dir, _shell_quote
 from crypto.hash import sha256
 from validate import validate_name, validate_version, validate_tarball_url
 from flags import write_flags_cache
@@ -73,8 +73,7 @@ def install_package(pkg: LockedPackage, mut client: HttpClient) raises:
     # Verify SHA256 — empty sha256 is a fatal error (no integrity bypass)
     if pkg.sha256.byte_length() == 0:
         raise Error("SHA256 is missing for " + pkg.name + " — refusing to install unverified package")
-    var content = fs_read_file(tarball_path)
-    var actual = sha256_hex(content)
+    var actual = sha256_hex_bytes(fs_read_bytes(tarball_path))
     if actual != pkg.sha256:
         raise Error(
             "SHA256 mismatch for " + pkg.name + "\n" +

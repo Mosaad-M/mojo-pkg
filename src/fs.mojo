@@ -1,28 +1,27 @@
 # src/fs.mojo
-# File system FFI wrappers + platform detection.
-# All POSIX calls work identically on Linux and macOS.
+# File system helpers + platform detection (Linux and macOS).
 #
-# NOTE: unsafe_ptr() in Mojo 0.26+ does not guarantee a null byte at data[len].
-# All FFI functions that need C strings use alloc+copy+null-terminate explicitly.
+# File I/O, existence checks and command output go through Mojo's std (open,
+# std.os.path, std.subprocess). A program may declare each C function with one
+# signature only, and std declares open/read/write/lseek/popen/pclose itself;
+# tls (linked into mojo-pkg) uses std open(), so declaring them here would not
+# compile. Only system(), which std does not declare, is called directly.
+#
+# NOTE: unsafe_ptr() does not guarantee a null byte at data[len], so the
+# system() wrapper copies and null-terminates the command explicitly.
 
 from std.ffi import external_call
 from std.memory import alloc
 from std.os import getenv
+from std.os.path import exists
+from std.subprocess import run
 
 
 # ─── Platform detection ────────────────────────────────────────────────────────
 
 def fs_exists(path: String) -> Bool:
-    """Return True if path exists (via access syscall)."""
-    var pb = path.as_bytes()
-    var n = len(pb)
-    var buf = alloc[UInt8](n + 1)
-    for i in range(n):
-        buf[unsafe_offset=i] = pb[i]
-    buf[unsafe_offset=n] = 0
-    var ret = external_call["access", Int32](buf, Int32(0))
-    buf.unsafe_free()
-    return ret == 0
+    """Return True if path exists."""
+    return exists(path)
 
 
 def platform_name() -> String:
@@ -106,84 +105,38 @@ def fs_mkdir_p(path: String) raises:
 
 def fs_read_file(path: String) raises -> String:
     """Read entire file and return as String."""
-    var pb = path.as_bytes()
-    var pn = len(pb)
-    var pbuf = alloc[UInt8](pn + 1)
-    for i in range(pn):
-        pbuf[unsafe_offset=i] = pb[i]
-    pbuf[unsafe_offset=pn] = 0
-    var fd = external_call["open", Int32](pbuf, Int32(0))  # O_RDONLY=0
-    pbuf.unsafe_free()
-    if fd < 0:
+    try:
+        with open(path, "r") as f:
+            return f.read()
+    except:
         raise Error("Cannot open file: " + path)
 
-    var size = external_call["lseek", Int64](Int(fd), Int64(0), Int32(2))  # SEEK_END=2
-    _ = external_call["lseek", Int64](Int(fd), Int64(0), Int32(0))         # SEEK_SET=0
 
-    if size <= 0:
-        _ = external_call["close", Int32](fd)
-        return String("")
-
-    var rbuf = alloc[UInt8](Int(size) + 1)
-    var n = external_call["read", Int](fd, rbuf, Int(size))
-    _ = external_call["close", Int32](fd)
-
-    if n <= 0:
-        rbuf.unsafe_free()
-        return String("")
-
-    var out = List[UInt8](capacity=n)
-    for i in range(n):
-        out.append(rbuf[unsafe_offset=i])
-    rbuf.unsafe_free()
-    return String(unsafe_from_utf8=out^)
+def fs_read_bytes(path: String) raises -> List[UInt8]:
+    """Read an entire file as raw bytes (for binary files such as tarballs)."""
+    try:
+        with open(path, "r") as f:
+            return f.read_bytes()
+    except:
+        raise Error("Cannot open file: " + path)
 
 
 def fs_write_file(path: String, content: String) raises:
     """Write string to file, creating or truncating it."""
-    var pb = path.as_bytes()
-    var pn = len(pb)
-    var pbuf = alloc[UInt8](pn + 1)
-    for i in range(pn):
-        pbuf[unsafe_offset=i] = pb[i]
-    pbuf[unsafe_offset=pn] = 0
-    var fd = external_call["creat", Int32](pbuf, Int32(420))  # mode 0644
-    pbuf.unsafe_free()
-    if fd < 0:
+    try:
+        with open(path, "w") as f:
+            f.write(content)
+    except:
         raise Error("Cannot write file: " + path)
-
-    var bytes = content.as_bytes()
-    var n = len(bytes)
-    if n > 0:
-        var wbuf = alloc[UInt8](n)
-        for i in range(n):
-            wbuf[unsafe_offset=i] = bytes[i]
-        _ = external_call["write", Int](Int(fd), wbuf, n)
-        wbuf.unsafe_free()
-    _ = external_call["close", Int32](fd)
 
 
 def fs_write_bytes(path: String, data: List[UInt8]) raises:
     """Write raw bytes to file."""
-    var pb = path.as_bytes()
-    var pn = len(pb)
-    var pbuf = alloc[UInt8](pn + 1)
-    for i in range(pn):
-        pbuf[unsafe_offset=i] = pb[i]
-    pbuf[unsafe_offset=pn] = 0
-    var fd = external_call["creat", Int32](pbuf, Int32(420))  # mode 0644
-    pbuf.unsafe_free()
-    if fd < 0:
+    try:
+        with open(path, "w") as f:
+            f.write_bytes(data)
+    except:
         raise Error("Cannot write file: " + path)
-
-    var n = len(data)
-    if n > 0:
-        var wbuf = alloc[UInt8](n)
-        for i in range(n):
-            wbuf[unsafe_offset=i] = data[i]
-        _ = external_call["write", Int](Int(fd), wbuf, n)
-        wbuf.unsafe_free()
-    _ = external_call["close", Int32](fd)
 
 
 # ─── system() ─────────────────────────────────────────────────────────────────
@@ -216,40 +169,8 @@ def fs_rm_rf(path: String) raises:
 
 
 def fs_run_output(cmd: String) raises -> String:
-    """Run cmd via popen() and return trimmed stdout."""
-    var cb = cmd.as_bytes()
-    var cn = len(cb)
-    var cbuf = alloc[UInt8](cn + 1)
-    for i in range(cn):
-        cbuf[unsafe_offset=i] = cb[i]
-    cbuf[unsafe_offset=cn] = 0
-    var mode = alloc[UInt8](2)
-    mode[] = 114  # 'r'
-    mode[unsafe_offset=1] = 0
-    var fp = external_call["popen", Int](cbuf, mode)
-    cbuf.unsafe_free()
-    mode.unsafe_free()
-    if fp == 0:
-        return String("")
-    var out = List[UInt8]()
-    var rbuf = alloc[UInt8](256)
-    while True:
-        var nr = external_call["fread", Int](rbuf, Int(1), Int(255), fp)
-        if nr <= 0:
-            break
-        for i in range(nr):
-            out.append(rbuf[unsafe_offset=i])
-    rbuf.unsafe_free()
-    _ = external_call["pclose", Int32](fp)
-    var end = len(out)
-    while end > 0 and (out[end - 1] == UInt8(10) or out[end - 1] == UInt8(13)):
-        end -= 1
-    var trimmed = List[UInt8]()
-    for i in range(end):
-        trimmed.append(out[i])
-    if len(trimmed) == 0:
-        return String("")
-    return String(unsafe_from_utf8=trimmed^)
+    """Run cmd and return its stdout with trailing whitespace removed."""
+    return run(cmd)
 
 
 def current_platform() -> String:

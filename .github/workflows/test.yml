@@ -16,7 +16,7 @@ jobs:
       - name: Clone tls
         run: |
           git clone https://github.com/Mosaad-M/tls.git ../tls_pure
-          git -C ../tls_pure checkout a2f30cf07086f2de5e847ab35d9467f266708250
+          git -C ../tls_pure checkout 2d07454a66b0c8a1f62795619bc048e9f0dde330
 
       - name: Install pixi
         uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
@@ -34,7 +34,7 @@ jobs:
       - name: Clone tls
         run: |
           git clone https://github.com/Mosaad-M/tls.git ../tls_pure
-          git -C ../tls_pure checkout a2f30cf07086f2de5e847ab35d9467f266708250
+          git -C ../tls_pure checkout 2d07454a66b0c8a1f62795619bc048e9f0dde330
 
       - name: Install pixi
         uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
@@ -66,7 +66,7 @@ jobs:
       - name: Clone tls
         run: |
           git clone https://github.com/Mosaad-M/tls.git ../tls_pure
-          git -C ../tls_pure checkout a2f30cf07086f2de5e847ab35d9467f266708250
+          git -C ../tls_pure checkout 2d07454a66b0c8a1f62795619bc048e9f0dde330
 
       - name: Install pixi
         uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
@@ -84,7 +84,7 @@ jobs:
       - name: Clone tls
         run: |
           git clone https://github.com/Mosaad-M/tls.git ../tls_pure
-          git -C ../tls_pure checkout a2f30cf07086f2de5e847ab35d9467f266708250
+          git -C ../tls_pure checkout 2d07454a66b0c8a1f62795619bc048e9f0dde330
 
       - name: Install pixi
         uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
