@@ -1,10 +1,13 @@
 # tests/test_tcp.mojo
-# Tests for tcp.mojo: platform constants, private-IP detection, DNS resolution.
+# Tests for the vendored tcp.mojo (tcp 2.0.0): platform constants, private-IP
+# detection, DNS resolution. The full tcp test suite lives in Mosaad-M/tcp.
 
 from std.sys.info import CompilationTarget
 from tcp import (
     _is_private_ip,
-    _resolve_host,
+    _resolve_all,
+    AF_INET,
+    AF_INET6,
     SOL_SOCKET,
     SO_RCVTIMEO,
     SO_SNDTIMEO,
@@ -108,17 +111,18 @@ def test_public_ip() raises:
 
 
 def test_resolve_host() raises:
-    """Resolve raw.githubusercontent.com and confirm we get a non-zero address."""
-    var addr = _resolve_host("raw.githubusercontent.com", 443)
-    assert_true(addr.sin_addr != 0, "resolved IP is non-zero")
-    # On macOS, sockaddr_in has a leading sin_len byte (uint8) before sin_family (uint8),
-    # so the UInt16 sin_family field reads as (sin_len | sin_family<<8) = 528.
-    # On Linux, sin_family (uint16) is 2 (AF_INET) directly.
-    comptime if CompilationTarget.is_macos():
-        # sin_family byte is the high byte of the UInt16 field: (val >> 8) & 0xFF == 2
-        assert_true((Int(addr.sin_family) >> 8) & 0xFF == 2, "AF_INET family byte (macOS)")
-    else:
-        assert_int_eq(Int(addr.sin_family), 2, "AF_INET family")
+    """Resolve raw.githubusercontent.com: at least one IPv4 or IPv6 address,
+    IPv4 addresses first."""
+    var addrs = _resolve_all("raw.githubusercontent.com", 443)
+    assert_true(len(addrs) > 0, "at least one address")
+    var seen_v6 = False
+    for i in range(len(addrs)):
+        var f = addrs[i].family
+        assert_true(f == AF_INET or f == AF_INET6, "family is AF_INET or AF_INET6")
+        if f == AF_INET6:
+            seen_v6 = True
+        else:
+            assert_false(seen_v6, "IPv4 addresses come before IPv6")
     print("PASS: test_resolve_host")
 
 
@@ -126,7 +130,7 @@ def test_resolve_bad_host() raises:
     """Resolving a non-existent host must raise."""
     var raised = False
     try:
-        _ = _resolve_host("this.host.does.not.exist.invalid", 443)
+        _ = _resolve_all("this.host.does.not.exist.invalid", 443)
     except:
         raised = True
     assert_true(raised, "bad host raises Error")
