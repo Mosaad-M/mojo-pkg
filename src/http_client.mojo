@@ -340,7 +340,7 @@ struct HttpClient(Movable):
                     url.port,
                     reject_private_ips=not self.allow_private_ips,
                 )
-                var new_tls = TlsSocket(tcp_sock.fd)
+                var new_tls = TlsSocket(tcp_sock.detach())
                 new_tls.connect(url.host, self._ca_bundle.copy())
                 _ = new_tls.send(req_buf)
                 raw_bytes = _recv_tls_keepalive(new_tls)
