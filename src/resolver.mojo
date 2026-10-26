@@ -74,7 +74,7 @@ def semver_parse(version: String) raises -> SemVer:
         var out = List[UInt8](capacity=len(bytes) - 1)
         for i in range(1, len(bytes)):
             out.append(bytes[i])
-        s = String(unsafe_from_utf8=out^)
+        s = String(unsafe_from_utf8=out)
 
     var parts = s.split(".")
     if len(parts) < 2:
@@ -144,7 +144,7 @@ def _satisfies_comparator(version: String, constraint: String) raises -> Bool:
     var ver_bytes = List[UInt8](capacity=len(bytes) - ver_start)
     for i in range(ver_start, len(bytes)):
         ver_bytes.append(bytes[i])
-    var c = semver_parse(String(unsafe_from_utf8=ver_bytes^))
+    var c = semver_parse(String(unsafe_from_utf8=ver_bytes))
 
     if op == ">=":
         return c <= v

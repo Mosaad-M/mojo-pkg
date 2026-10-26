@@ -51,7 +51,7 @@ def write_flags_file(lock: LockFile, path: String) raises:
         var trimmed = List[UInt8](capacity=end)
         for i in range(end):
             trimmed.append(bytes[i])
-        content = String(unsafe_from_utf8=trimmed^)
+        content = String(unsafe_from_utf8=trimmed)
     fs_write_file(path, content + "\n")
 
 

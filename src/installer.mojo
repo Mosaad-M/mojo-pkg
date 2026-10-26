@@ -19,7 +19,7 @@ def _bytes_to_hex(data: List[UInt8]) -> String:
         var b = data[i]
         out.append(hb[Int(b >> 4)])
         out.append(hb[Int(b & 0xF)])
-    return String(unsafe_from_utf8=out^)
+    return String(unsafe_from_utf8=out)
 
 
 def sha256_hex(data: String) -> String:

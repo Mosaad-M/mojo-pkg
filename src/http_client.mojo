@@ -373,7 +373,7 @@ struct HttpClient(Movable):
                     url.port,
                     reject_private_ips=not self.allow_private_ips,
                 )
-                var request = String(unsafe_from_utf8=req_buf^)
+                var request = String(unsafe_from_utf8=req_buf)
                 _ = new_sock.send(request)
                 raw_bytes = _recv_http_keepalive(new_sock)
                 # Evict old cached connection
@@ -387,7 +387,7 @@ struct HttpClient(Movable):
             raise Error("empty response from server")
 
         # Convert to string and parse
-        var raw_response = String(unsafe_from_utf8=raw_bytes^)
+        var raw_response = String(unsafe_from_utf8=raw_bytes)
         var parsed = _parse_response(raw_response, url_str)
 
         # If server requested connection close, invalidate cache
@@ -802,7 +802,7 @@ def _ptr_to_string(
     var result = List[UInt8](capacity=end - start)
     for i in range(start, end):
         result.append(data_ptr[unsafe_offset=i])
-    return String(unsafe_from_utf8=result^)
+    return String(unsafe_from_utf8=result)
 
 
 def _find_crlf_crlf(data_ptr: Pointer[UInt8, _], data_len: Int) -> Int:
@@ -889,7 +889,7 @@ def _decode_chunked(body: String) raises -> String:
     """
     var result = List[UInt8](capacity=body.byte_length())
     var body_copy = body
-    var ptr = body_copy.as_c_string_slice().unsafe_ptr().unsafe_bitcast[UInt8]()
+    var ptr = body_copy.as_c_string_span().ptr().unsafe_bitcast[UInt8]()
     var body_len = body.byte_length()
     var pos = 0
     while pos < body_len:
@@ -919,7 +919,7 @@ def _decode_chunked(body: String) raises -> String:
         for i in range(chunk_size):
             result.append(ptr[unsafe_offset=data_start + i])
         pos = data_start + chunk_size + 2  # skip data + trailing \r\n
-    return String(unsafe_from_utf8=result^)
+    return String(unsafe_from_utf8=result)
 
 
 def _parse_response(raw: String, url: String) raises -> HttpResponse:
@@ -941,7 +941,7 @@ def _parse_response(raw: String, url: String) raises -> HttpResponse:
 
     # Convert to pointer once — all parsing uses pointer arithmetic
     var raw_copy = raw
-    var ptr = raw_copy.as_c_string_slice().unsafe_ptr().unsafe_bitcast[UInt8]()
+    var ptr = raw_copy.as_c_string_span().ptr().unsafe_bitcast[UInt8]()
     var raw_len = raw.byte_length()
 
     # Find header/body separator (\r\n\r\n)

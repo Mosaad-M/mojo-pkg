@@ -5,7 +5,7 @@ platforms = ["linux-64", "osx-arm64"]
 version = "0.9.6"
 
 [dependencies]
-mojo = ">=1.0.0"
+mojo = ">=1.2.0"
 
 [activation]
 scripts = ["scripts/activate.sh"]

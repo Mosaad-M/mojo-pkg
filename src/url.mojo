@@ -83,7 +83,7 @@ def _ptr_to_string(
     var result = List[UInt8](capacity=end - start)
     for i in range(start, end):
         result.append(data_ptr[unsafe_offset=i])
-    return String(unsafe_from_utf8=result^)
+    return String(unsafe_from_utf8=result)
 
 
 def _find_scheme_sep(data_ptr: Pointer[UInt8, _], data_len: Int) -> Int:
@@ -169,7 +169,7 @@ def parse_url(raw_url: String) raises -> Url:
 
     # Convert to pointer once
     var raw_copy = raw_url
-    var ptr = raw_copy.as_c_string_slice().unsafe_ptr().unsafe_bitcast[UInt8]()
+    var ptr = raw_copy.as_c_string_span().ptr().unsafe_bitcast[UInt8]()
     var raw_len = raw_url.byte_length()
 
     # Step 1: Find "://" to extract scheme

@@ -38,7 +38,7 @@ def test_include_empty() raises:
     var trimmed = List[UInt8](capacity=end)
     for i in range(end):
         trimmed.append(bytes[i])
-    var result = String(unsafe_from_utf8=trimmed^)
+    var result = String(unsafe_from_utf8=trimmed)
     assert_eq(result, "", "include empty: no flags")
     print("PASS: test_include_empty")
 

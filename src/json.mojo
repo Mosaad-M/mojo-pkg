@@ -11,7 +11,7 @@
 #
 # ============================================================================
 
-from std.memory import alloc
+from std.memory.alloc import unsafe_alloc
 from std.memory.unsafe_pointer import Pointer
 
 
@@ -79,7 +79,7 @@ def _write_escaped_string[W: Writer](s: String, mut writer: W):
     if total == 0:
         return
     var s_copy = s
-    var ptr = s_copy.as_c_string_slice().unsafe_ptr().unsafe_bitcast[UInt8]()
+    var ptr = s_copy.as_c_string_span().ptr().unsafe_bitcast[UInt8]()
     var run_start = 0
     for i in range(total):
         var c = ptr[unsafe_offset=i]
@@ -89,7 +89,7 @@ def _write_escaped_string[W: Writer](s: String, mut writer: W):
                 var run = List[UInt8](capacity=i - run_start)
                 for j in range(run_start, i):
                     run.append(ptr[unsafe_offset=j])
-                writer.write(String(unsafe_from_utf8=run^))
+                writer.write(String(unsafe_from_utf8=run))
             # Write the escape sequence
             if c == _QUOTE:
                 writer.write('\\"')
@@ -123,7 +123,7 @@ def _write_escaped_string[W: Writer](s: String, mut writer: W):
         var run = List[UInt8](capacity=total - run_start)
         for j in range(run_start, total):
             run.append(ptr[unsafe_offset=j])
-        writer.write(String(unsafe_from_utf8=run^))
+        writer.write(String(unsafe_from_utf8=run))
 
 
 # ============================================================================
@@ -232,13 +232,13 @@ struct JsonValue(
         self._str_val = copy._str_val
         # Deep copy heap-allocated data
         if copy._arr_ptr:
-            var p = alloc[List[JsonValue]](1)
+            var p = unsafe_alloc[List[JsonValue]](1)
             p.unsafe_write(copy=copy._arr_ptr.unsafe_value()[])
             self._arr_ptr = Optional(p)
         else:
             self._arr_ptr = Optional[Pointer[List[JsonValue], MutUntrackedOrigin]](None)
         if copy._obj_ptr:
-            var p = alloc[JsonObject](1)
+            var p = unsafe_alloc[JsonObject](1)
             p.unsafe_write(copy=copy._obj_ptr.unsafe_value()[])
             self._obj_ptr = Optional(p)
         else:
@@ -268,11 +268,11 @@ struct JsonValue(
         v._num_val = self._num_val
         v._str_val = self._str_val
         if self._arr_ptr:
-            var p = alloc[List[JsonValue]](1)
+            var p = unsafe_alloc[List[JsonValue]](1)
             p.unsafe_write(copy=self._arr_ptr.unsafe_value()[])
             v._arr_ptr = Optional(p)
         if self._obj_ptr:
-            var p = alloc[JsonObject](1)
+            var p = unsafe_alloc[JsonObject](1)
             p.unsafe_write(copy=self._obj_ptr.unsafe_value()[])
             v._obj_ptr = Optional(p)
         return v^
@@ -622,7 +622,7 @@ def json_array() -> JsonValue:
     """Create an empty array JsonValue."""
     var v = JsonValue()
     v.kind = JSON_ARRAY
-    var p = alloc[List[JsonValue]](1)
+    var p = unsafe_alloc[List[JsonValue]](1)
     p.unsafe_write(List[JsonValue](capacity=4))
     v._arr_ptr = Optional(p)
     return v^
@@ -632,7 +632,7 @@ def json_object() -> JsonValue:
     """Create an empty object JsonValue."""
     var v = JsonValue()
     v.kind = JSON_OBJECT
-    var p = alloc[JsonObject](1)
+    var p = unsafe_alloc[JsonObject](1)
     p.unsafe_write(JsonObject(capacity=4))
     v._obj_ptr = Optional(p)
     return v^
@@ -659,7 +659,7 @@ def parse_json(s: String) raises -> JsonValue:
         raise Error("empty JSON input")
     # Parse directly from the string's memory — no input copy
     var s_copy = String(s)
-    var data_ptr = s_copy.as_c_string_slice().unsafe_ptr().unsafe_bitcast[UInt8]()
+    var data_ptr = s_copy.as_c_string_span().ptr().unsafe_bitcast[UInt8]()
     var data_len = s.byte_length()
     var pos: Int = 0
     var result = _parse_value(data_ptr, data_len, pos, 0)
@@ -695,7 +695,7 @@ def _parse_value(
 
     if c == _QUOTE:
         var s = _parse_string(data_ptr, data_len, pos)
-        return json_string(s^)
+        return json_string(s)
     elif c == _LBRACE:
         return _parse_object(data_ptr, data_len, pos, depth + 1)
     elif c == _LBRACKET:
@@ -734,7 +734,7 @@ def _parse_string(
         var c = data_ptr[unsafe_offset=pos]
         if c == _QUOTE:
             pos += 1  # skip closing quote
-            return String(unsafe_from_utf8=result^)
+            return String(unsafe_from_utf8=result)
         elif c == _BACKSLASH:
             pos += 1  # skip backslash
             if pos >= data_len:
@@ -926,7 +926,7 @@ def _parse_object(
         var value = _parse_value(data_ptr, data_len, pos, depth + 1)
 
         # Store in object
-        obj._obj_ptr.unsafe_value()[].set(key^, value^)
+        obj._obj_ptr.unsafe_value()[].set(key, value^)
 
         # Expect comma or closing brace
         _skip_whitespace(data_ptr, data_len, pos)

@@ -103,7 +103,7 @@ def manifest_parse_str(src: String) raises -> Manifest:
         for i in range(1, len(b) - 1):
             if b[i] != 34:  # skip quotes
                 out_b.append(b[i])
-        var inner = String(unsafe_from_utf8=out_b^)
+        var inner = String(unsafe_from_utf8=out_b)
         var parts = inner.split(",")
         for p in parts:
             var pb = String(p).as_bytes()
@@ -112,7 +112,7 @@ def manifest_parse_str(src: String) raises -> Manifest:
                 if pb[i] != 32 and pb[i] != 9:
                     trimmed.append(pb[i])
             if len(trimmed) > 0:
-                m.platforms.append(String(unsafe_from_utf8=trimmed^))
+                m.platforms.append(String(unsafe_from_utf8=trimmed))
     else:
         var parts = plat_raw.split(",")
         for p in parts:
@@ -122,7 +122,7 @@ def manifest_parse_str(src: String) raises -> Manifest:
                 if pb[i] != 32 and pb[i] != 9:
                     trimmed.append(pb[i])
             if len(trimmed) > 0:
-                m.platforms.append(String(unsafe_from_utf8=trimmed^))
+                m.platforms.append(String(unsafe_from_utf8=trimmed))
 
     # [dependencies] — each key is a dep name with inline table value
     if toml_has_section(doc, "dependencies"):
@@ -198,7 +198,7 @@ def _toml_escape(s: String) -> String:
             out.append(110)
         else:
             out.append(b)
-    return String(unsafe_from_utf8=out^)
+    return String(unsafe_from_utf8=out)
 
 
 def manifest_write(m: Manifest, path: String) raises:
