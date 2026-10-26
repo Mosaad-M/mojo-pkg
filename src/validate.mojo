@@ -80,7 +80,7 @@ def trim_spaces(s: String) -> String:
     var out = List[UInt8](capacity=end - start)
     for i in range(start, end):
         out.append(bytes[i])
-    return String(unsafe_from_utf8=out^)
+    return String(unsafe_from_utf8=out)
 
 
 def split_comparator(comparator: String) -> Tuple[String, String]:
@@ -101,7 +101,7 @@ def split_comparator(comparator: String) -> Tuple[String, String]:
             op.append(bytes[i])
         else:
             ver.append(bytes[i])
-    return (String(unsafe_from_utf8=op^), String(unsafe_from_utf8=ver^))
+    return (String(unsafe_from_utf8=op), String(unsafe_from_utf8=ver))
 
 
 def validate_constraint(constraint: String) raises:

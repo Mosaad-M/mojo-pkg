@@ -96,7 +96,7 @@ def _json_escape(s: String) -> String:
             out.append(92); out.append(116)  # \t
         else:
             out.append(b)
-    return String(unsafe_from_utf8=out^)
+    return String(unsafe_from_utf8=out)
 
 
 def lockfile_write(lock: LockFile, path: String) raises:

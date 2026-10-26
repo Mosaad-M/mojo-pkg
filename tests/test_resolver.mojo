@@ -72,7 +72,7 @@ def index() -> Dict[String, PackageMeta]:
 
 
 def deps(*pairs: String) -> List[Dependency]:
-    """deps("requests", ">=1.0.0", "json", "=1.1.0", ...)"""
+    """Build a dependency list from name, constraint pairs, e.g. deps("requests", ">=1.0.0")."""
     var out = List[Dependency]()
     var i = 0
     while i + 1 < len(pairs):

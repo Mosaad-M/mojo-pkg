@@ -32,7 +32,7 @@ def _trim(s: String) -> String:
     var out = List[UInt8](capacity=end - start)
     for i in range(start, end):
         out.append(bytes[i])
-    return String(unsafe_from_utf8=out^)
+    return String(unsafe_from_utf8=out)
 
 
 def _strip_comment(s: String) -> String:
@@ -48,7 +48,7 @@ def _strip_comment(s: String) -> String:
             var out = List[UInt8](capacity=i)
             for j in range(i):
                 out.append(bytes[j])
-            return _trim(String(unsafe_from_utf8=out^))
+            return _trim(String(unsafe_from_utf8=out))
     return s
 
 
@@ -93,7 +93,7 @@ def _unquote(s: String) raises -> String:
             else:
                 out.append(b)
             i += 1
-        return String(unsafe_from_utf8=out^)
+        return String(unsafe_from_utf8=out)
     return s
 
 
@@ -117,7 +117,7 @@ def _substr(s: String, start: Int, end: Int) -> String:
     var out = List[UInt8](capacity=e - st)
     for i in range(st, e):
         out.append(bytes[i])
-    return String(unsafe_from_utf8=out^)
+    return String(unsafe_from_utf8=out)
 
 
 def _parse_inline_table(s: String) raises -> Dict[String, String]:
