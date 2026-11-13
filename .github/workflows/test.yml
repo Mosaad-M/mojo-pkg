@@ -64,7 +64,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
   test-macos:
-    runs-on: macos-14
+    runs-on: macos-15
     permissions:
       contents: read
     steps:
@@ -82,7 +82,7 @@ jobs:
         run: pixi run test
 
   build-and-smoke-macos:
-    runs-on: macos-14
+    runs-on: macos-15
     permissions:
       contents: read
     steps:
